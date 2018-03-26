@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% import 'macro.html' as render %}
+{% from 'macro.html' import render_flashed_messages %}
+
+{% block title %}{{ title }} - ECA{% endblock %}
+
+{% block content %}
+<div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-10">
+                        {{ render_flashed_messages() }}
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="card-title">{{title}}</h4>
+                            </div>
+                            <div class="card-body">
+                                <form method="post">
+                                	{{ form.hidden_tag() }}
+
+                                    <div class="row">
+                                        <div class='col-md-4'>
+                                            <div class="form-group">
+                                                {{ form.eca_name.label }}
+                                                {{ form.eca_name(class='form-control') }}
+                                                {% if form.eca_name.errors %}
+                                                {% for error in form.eca_name.errors %} {#- This is to show the errors for individual fields -#}
+  			                                        <p class='text-danger'>{{ error }}</p>
+		                                        {% endfor %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class='col-md-4'>
+                                            <div class="form-group">
+                                                <label for="eca_start_time">Start Time</label>
+                                                <input id='eca_start_time' name='eca_start_time' type='text' class='form-control' disabled>
+                                            </div>
+                                        </div>
+
+                                        <div class='col-md-4'>
+                                            <div class="form-group">
+                                                <label for="eca_end_time">End Time</label>
+                                                <input id='eca_end_time' name='eca_end_time' type='text' class='form-control' disabled>
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+                                    <div class="row">
+                                        <div class='col-md-4'>
+                                            <div class="form-group">
+                                                <label for="eca_organiser">Organiser</label>
+                                                <input id='eca_organiser' name='eca_organiser' type='text' class='form-control' disabled>
+                                            </div>
+                                        </div>
+
+                                        <div class='col-md-4'>
+                                            <div class="form-group">
+                                                <label for="eca_organiser_email_address">Organiser's Email Address</label>
+                                                <input id='eca_organiser_email_address' name='eca_organiser_email_address' type='text' class='form-control' disabled>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="row">
+
+                                        <div class='col-md-4'>
+                                            <div class="form-group">
+                                                <label for="eca_location">Location</label>
+                                                <input id='eca_location' name='eca_location' type='text' class='form-control' disabled>
+                                            </div>
+                                        </div>
+
+                                        <div class='col-md-4'>
+                                            <div class="form-group">
+                                                <label for="eca_day">Day</label>
+                                                <input id='eca_day' name='eca_day' type='text' class='form-control' disabled>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="row">
+                                        <div class='col-md-4'>
+                                            <div class="form-group">
+                                                <label for="eca_brief_description">Brief Description</label>
+                                                <input id='eca_brief_description' name='eca_brief_description' type='text' class='form-control' disabled>
+                                            </div>
+                                        </div>
+
+                                        <div class='col-md-6'>
+                                            <div class="form-group">
+                                                <label for="eca_essentials">Essentials</label>
+                                                <textarea id='eca_essentials' name='eca_essentials' class='form-control' disabled></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class='col-md-4'>
+                                            <div class="form-group">
+                                                <label for="eca_max_people">Students enrolled</label>
+                                                <input id='eca_max_people' name='eca_max_people' class='form-control' disabled/>
+                                            </div>
+                                        </div>
+
+                                        <div class='col-md-4'>
+                                            <div class="form-group">
+                                                <label for="eca_max_waiting_list">Waiting List</label>
+                                                <input id='eca_max_waiting_list' name='eca_max_waiting_list' class='form-control' disabled/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-info btn-fill pull-right">Join ECA</button>
+                                    <div class="clearfix"></div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+</div>
+
+{% endblock %}
+
+{% block custom_script %}
+    <script src="{{ url_for('static', filename='assets/custom/async_functions.js') }}"></script>
+{% endblock %}

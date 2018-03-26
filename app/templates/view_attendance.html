@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% from 'macro.html' import render_flashed_messages %}
+
+{% block content %}
+<div class="content">
+    <div class="container-fluid">
+        {{ render_flashed_messages() }}
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title text-center">{{ eca.name }} ECA - View Attendance</h2>
+                </div>
+                <div class="card-body table-full-width table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Attendance</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {%- for registration in eca.registration -%}
+                            <tr>
+                                <td><a href="{{ url_for('view_attendance', eca_name=eca.name.lower(), user_id=registration.user.id) }}"> {{ registration.user.first_name }} {{ registration.user.last_name }}</a></td>
+                                <td class="td-actions text-right">
+                                    {% set attendance_true = Attendance.query.filter_by(registration=registration, attended=True).all()|length %}
+                                    {% set total_attendance = Attendance.query.filter_by(registration=registration).all()|length %}
+                                    {{ attendance_true }}/{{ total_attendance }}
+                                    (<div class="count">{% if total_attendance == 0 %}0{% else %}{{ ((attendance_true / total_attendance) * 100)|int }}{% endif %}</div>%)
+
+                                </td>
+                            </tr>
+                        {%- endfor -%}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block custom_script %}
+<script src="{{ url_for('static', filename='assets/custom/async_take_attendance.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/custom/counter_from_zero.js') }}"></script>
+{% endblock %}

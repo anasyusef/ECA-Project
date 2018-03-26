@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% import 'macro.html' as render %}
+{% from 'macro.html' import render_flashed_messages %}
+
+{% block content %}
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-10">
+                {{ render_flashed_messages() }}
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title" id="eca_title">Notify Updates</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                           {{ form.hidden_tag() }}
+
+                            <div class="row">
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        {{ form.eca_name.label }}
+                                        {{ form.eca_name(class='form-control') }}
+                                        {% for error in form.eca_name.errors %}
+                                            <p class='text-danger'>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        {{ form.status_notification.label }}
+                                        {{ form.status_notification(class='form-control') }}
+                                        {% for error in form.status_notification.errors %}
+                                            <p class='text-danger'>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+
+                                    <div class="form-group">
+                                        {{ form.custom_status_notification.label }}
+                                        {{ form.custom_status_notification(class='form-control') }}
+                                        {% for error in form.custom_status_notification.errors %}
+                                            <p class='text-danger'>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="row">
+
+                                <div class="col-md-10">
+                                    <p>Variables allowed:</p>
+                                    {% for variable, reason in reason_variables %}
+                                    <p>{{ variable }}: {{ reason }}</p>
+                                    {%- endfor -%}
+                                    <div class="form-group">
+                                        {{ form.reason.label }}
+                                        <textarea class="form-control" name="{{ form.reason.name }}" id="{{ form.reason.name }}"></textarea>
+                                        {% for error in form.reason.errors %}
+                                            <p class='text-danger'>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-info btn-fill pull-right">Send</button>
+                            <div class="clearfix"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block custom_script %}
+<script src="{{ url_for('static', filename='assets/custom/eca_notification1.js') }}"></script>
+
+{% endblock %}

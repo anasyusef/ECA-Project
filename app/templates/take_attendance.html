@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% from 'macro.html' import render_flashed_messages %}
+
+{% block content %}
+<div class="content">
+    <div class="container-fluid">
+        {{ render_flashed_messages() }}
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title text-center">{{ eca.name }} ECA - Attendance</h2>
+                </div>
+                <div class="card-body table-full-width table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Attended</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {%- for registration in eca.registration -%}
+                            {%- if not Attendance.query.filter_by(registration=registration, date=today).first() -%}
+                            <tr>
+                                <td>{{ registration.user.first_name }} {{ registration.user.last_name }}</td>
+                                <td class="td-actions text-right">
+                                    <button id="{{ registration.user.id }}-yes" type="button" rel="tooltip" title="Yes" class="btn btn-success btn-simple btn-link">
+                                        <i class="fa fa-check"></i>
+                                    </button>
+                                    <button id="{{ registration.user.id }}-no" type="button" rel="tooltip" title="No" class="btn btn-danger btn-simple btn-link">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {%- endif -%}
+                        {%- endfor -%}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block custom_script %}
+<script src="{{ url_for('static', filename='assets/custom/async_take_attendance1.js') }}"></script>
+{% endblock %}

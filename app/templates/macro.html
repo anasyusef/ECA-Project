@@ -1,0 +1,85 @@
+{%- macro render_input(name, label_name, div_class_column, errors, type='text', class_input='form-control', div_class='form-group', auto_label=False) -%}
+
+<div class='{{ div_class_column }}'>
+	<div class="{{ div_class }}">
+		{% if auto_label == False %}
+		<label for='{{ label_name }}'>{{ name }}</label>
+		{%- else -%}
+
+		{{ name }} {#- if form.user.label is put then two labels will be created, one inside the other, this is to avoid that -#}
+
+		{% endif %}
+		<input id='{{ label_name }}' name='{{ label_name }}' type='{{ type }}' class='{{ class_input }}'
+		{%- if kwargs %}
+				{%- for key, value in kwargs.items() -%}
+					{{ key }}='{{ value }}'
+				{%- endfor -%}
+		{%- endif -%} />
+	</div>
+		{% for error in errors %} {#- This is to show the errors for individual fields -#}
+  			<p class='text-danger'>{{ error }}</p>
+		{% endfor %}
+
+</div>
+{%- endmacro -%}
+
+{%- macro render_input_register(name, data_validate, type='text', div_class='wrap-input100 validate-input', class_input='input100') -%}
+
+<div class="{{ div_class }}" data-validate="{{ data_validate }}">
+	<input class='{{ class_input }}' id='{{ name }}' name='{{ name }}' type='{{ type }}'
+		{%- if kwargs %}
+				{%- for key, value in kwargs.items() -%}
+					{{ key }}='{{ value }}'
+				{%- endfor -%}
+		{%- endif -%} />
+	<span class="focus-input100"></span>
+</div>
+
+{%- endmacro -%}
+
+{%- macro render_flashed_messages() -%}
+
+{% with messages = get_flashed_messages(with_categories=True) %}
+	{% if messages %}
+					{% set category_message = 'danger' %}
+					{% for message in messages %}
+						{% if message[0] == 'success' %}
+							{% set category_message = 'success' %}
+						{% endif %}
+
+
+
+					 <div class="alert alert-{{category_message}}" role="alert">
+						{{message[1]}}
+					</div>
+
+					{% endfor %}
+					{% endif %}
+{% endwith %}
+
+{%- endmacro -%}
+
+{% macro render_flashed_messages_main() %}
+
+{% with messages = get_flashed_messages(with_categories=True) %}
+				{% if messages %}
+				{% set category_message = 'danger' %}
+                {% for message in messages %}
+					{% if message[0] == 'success' %}
+						{% set category_message = 'success' %}
+					{% endif %}
+
+
+
+                 <div class="border border-{{ category_message }} text-{{ category_message }} rounded-0 alert alert-light alert-dismissible fade show" role="alert">
+                            <strong>{{ message[1] }}</strong>
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                            </button>
+                </div>
+
+                {% endfor %}
+                {% endif %}
+				{% endwith %}
+
+{%- endmacro -%}

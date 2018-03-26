@@ -1,0 +1,80 @@
+{% from 'macro.html' import render_flashed_messages_main %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>{{ title }}</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+<!--===============================================================================================-->
+	<link rel="icon" type="image/png" href="{{ url_for('static', filename='main_pages_assets/images/icons/favicon.ico') }}"/>
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main_pages_assets/vendor/bootstrap/css/bootstrap.min.css') }}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main_pages_assets/fonts/font-awesome-4.7.0/css/font-awesome.min.css') }}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main_pages_assets/fonts/iconic/css/material-design-iconic-font.min.css') }}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main_pages_assets/vendor/animate/animate.css') }}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main_pages_assets/vendor/css-hamburgers/hamburgers.min.css') }}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main_pages_assets/vendor/animsition/css/animsition.min.css') }}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main_pages_assets/vendor/select2/select2.min.css') }}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main_pages_assets/vendor/daterangepicker/daterangepicker.css') }}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main_pages_assets/css/util.css') }}">
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main_pages_assets/css/main.css') }}">
+<!--===============================================================================================-->
+</head>
+<body>
+
+<div class="limiter">
+		<div class="container-login100" style="background-image: url('{{ url_for('static', filename='main_pages_assets/images/bg-01.jpg') }}');">
+			<div class="wrap-login100">
+
+				{{ render_flashed_messages_main() }}
+
+				<form class="login100-form validate-form", method="post">
+
+					{{ form.hidden_tag() }}
+					<a href="{{ url_for('index') }}">
+						<span class="login100-form-logo">
+							<img src="{{ url_for('static', filename='main_pages_assets/images/dldcollegelogo.png') }}" alt="DLD Logo" class="rounded-circle" height="110", width="110" draggable="false">
+						</span>
+					</a>
+				{% block content %}
+
+				{% endblock %}
+
+				</form>
+			</div>
+		</div>
+</div>
+
+<!--===============================================================================================-->
+	<script src="{{ url_for('static', filename='main_pages_assets/vendor/jquery/jquery-3.2.1.min.js') }}"></script>
+<!--===============================================================================================-->
+	<script src="{{ url_for('static', filename='main_pages_assets/vendor/animsition/js/animsition.min.js') }}"></script>
+<!--===============================================================================================-->
+	<script src="{{ url_for('static', filename='main_pages_assets/vendor/bootstrap/js/popper.js') }}"></script>
+	<script src="{{ url_for('static', filename='main_pages_assets/vendor/bootstrap/js/bootstrap.min.js') }}"></script>
+<!--===============================================================================================-->
+	<script src="{{ url_for('static', filename='main_pages_assets/vendor/select2/select2.min.js') }}"></script>
+<!--===============================================================================================-->
+	<script src="{{ url_for('static', filename='main_pages_assets/vendor/daterangepicker/moment.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='main_pages_assets/vendor/daterangepicker/daterangepicker.js') }}"></script>
+<!--===============================================================================================-->
+	<script src="{{ url_for('static', filename='main_pages_assets/vendor/countdowntime/countdowntime.js') }}"></script>
+<!--===============================================================================================-->
+	<script src="{{ url_for('static', filename='main_pages_assets/js/main.js') }}"></script>
+
+{% block custom_script %}
+{% endblock %}
+
+</body>
+</html>

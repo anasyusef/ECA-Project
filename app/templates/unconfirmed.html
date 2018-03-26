@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% from 'macro.html' import render_flashed_messages %}
+
+{% block sidebar %}
+<div class="sidebar" data-color="{% if current_user.role.name == 'Teacher' %}blue{% else %}green{% endif %}">
+    <div class="sidebar-wrapper">
+        <div class="logo">
+            <a href="#" class="simple-text">
+                ECA Project
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+{{ render_flashed_messages() }}
+
+<div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-10">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Hi {{current_user.first_name}}!</h3>
+                                <h4 class="card-title">Your account is not confirmed yet</h4>
+                            </div>
+                            <div class="card-body">
+                                <p>We have sent you an email to confirm your account. If you did not receive a confirmation link,
+                                    please <a href="{{ url_for('resend_email') }}">click here</a></p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+</div>
+
+{% endblock %}

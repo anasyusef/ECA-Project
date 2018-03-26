@@ -1,0 +1,38 @@
+{% from 'macro.html' import render_flashed_messages_main %}
+{% extends 'base_main.html' %}
+
+{% block content %}
+
+
+		<span class="login100-form-title p-b-34 p-t-27">
+			Log in
+		</span>
+		<div class="wrap-input100 validate-input" data-validate="Enter username">
+			{{ form.username(class="input100", placeholder="Username")}}
+			<span class="focus-input100" data-placeholder="&#xf207;"></span>
+		</div>
+
+		<div class="wrap-input100 validate-input" data-validate="Enter password">
+			{{ form.password(class="input100", placeholder="Password") }}
+			<span class="focus-input100" data-placeholder="&#xf191;"></span>
+		</div>
+
+		<div class="contact100-form-checkbox">
+			{{ form.remember_me(class="input-checkbox100", id="ckb1") }}
+			{{form.remember_me.label(class="label-checkbox100", for="ckb1")}}
+		</div>
+
+		<div class="container-login100-form-btn">
+			<button class="login100-form-btn">
+				Login
+			</button>
+		</div>
+
+		<div class="text-center p-t-90">
+			<ul>
+				<li><a class="txt1" href="{{ url_for('register') }}">Don't have an account? <b>Sign Up</b></a></li>
+				<li><a class="txt1" href="{{ url_for('reset_password') }}">Forgot Password?</a></li>
+			</ul>
+		</div>
+
+{% endblock %}

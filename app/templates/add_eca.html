@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% import 'macro.html' as render %}
+{% from 'macro.html' import render_flashed_messages %}
+
+{% block title %}{{ title }} - ECA{% endblock %}
+
+{% block content %}
+<div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-10">
+                        {{ render_flashed_messages() }}
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="card-title">{{title}}</h4>
+                            </div>
+                            <div class="card-body">
+                                <form method="post">
+                                	{{ form.hidden_tag() }}
+                                    <div class="row">
+                                        {{ render.render_input(form.eca_name.label, form.eca_name.name, 'col-md-5',  placeholder='Football', autocomplete='true', auto_label=True, errors=form.eca_name.errors, required=True) }}
+                                        {{ render.render_input(form.max_people.label, form.max_people.name, 'col-md-5', errors=form.max_people.errors, auto_label=True, type='number', min=1, max=100, required=True, placeholder='12') }}
+                                    </div>
+
+                                    <div class="row">
+
+                                        {{ render.render_input(form.max_waiting_list.label, form.max_waiting_list.name, 'col-md-5', type='number', placeholder='0 if there is no waiting list', required='true', auto_label=True, errors=form.max_waiting_list.errors, min=0, max=100) }}
+                                    </div>
+                                    <div class="row">
+	                            		{{ render.render_input(form.start_time_eca.label, form.start_time_eca.name, 'col-md-5', required=True, auto_label=True, errors=form.start_time_eca.errors, type='time') }}
+	                            		{{ render.render_input(form.end_time_eca.label, form.end_time_eca.name, 'col-md-5', required=True, auto_label=True, errors=form.end_time_eca.errors, type='time') }}
+                                    </div>
+
+                                    <div class="row">
+                                        <div class='col-md-4'>
+                                            <div class="form-group">
+                                                {{ form.day_eca.label }}
+                                                {{ form.day_eca(class='form-control') }}
+                                            </div>
+                                        </div>
+
+                                    	{{ render.render_input(form.location_eca.label, form.location_eca.name, 'col-md-4', placeholder='Room 1.06', required='true', auto_label=True, errors=form.location_eca.errors) }}
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                {{ form.brief_description_eca.label }}
+                                                {{ form.brief_description_eca(class='form-control') }}
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-8">
+                                            <div class="form-group">
+                                                {{ form.essentials_eca.label }}
+                                                {{ form.essentials_eca(class='form-control') }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-info btn-fill pull-right">Add ECA</button>
+                                    <div class="clearfix"></div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+</div>
+
+{% endblock %}
+
+{% block custom_script %}
+    <script src="{{ url_for('static', filename='custom/add_student.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,4 @@
+<h2>Dear {{ user.first_name }},</h2>
+<h3>Action of the eca: {{ action }}</h3>
+<p>Reason: {{ reason | replace('{user_first_name}', user.first_name) |
+    replace('{user_last_name}', user.last_name) | replace('{eca_name}', eca_name) }}</p>

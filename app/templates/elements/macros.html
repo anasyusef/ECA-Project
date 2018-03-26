@@ -1,0 +1,9 @@
+{% macro input(name, label_name, div_class_column, disabled=False, type='text', class_input='form-control', value='', placeholder='', div_class='form-group', autocomplete='true') %}
+
+<div class="{{ div_class_column }}">
+	<div class="{{ div_class }}">
+		<label for="{{ label_name }}">{{ name }}</label>
+		<input id='{{ label_name }}' type='{{ type }}' class="{{ class_input }}" value="{{ value }}" placeholder="{{ placeholder }}" {% if disabled %} disabled {% endif %}{% if not autocomplete %} {{ autocomplete }} {% endif %}/>
+	</div>
+</div>
+{% endmacro %}

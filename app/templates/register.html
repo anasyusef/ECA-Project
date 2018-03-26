@@ -1,0 +1,40 @@
+{% from 'macro.html' import render_input_register, render_flashed_messages_main %}
+{% extends 'base_main.html' %}
+
+{% block content %}
+
+
+		<span class="login100-form-title p-b-34 p-t-27">
+			Register
+		</span>
+
+		{{ render_input_register(name=form.student_first_name.name, placeholder=form.student_first_name.label.text, data_validate='Enter First Name') }}
+
+		{{ render_input_register(name=form.student_last_name.name, placeholder=form.student_last_name.label.text, data_validate='Enter Last Name') }}
+
+		{{ render_input_register(name=form.student_username.name, placeholder=form.student_username.label.text, data_validate='Enter Username') }}
+
+		{{ render_input_register(name=form.student_password.name, placeholder=form.student_password.label.text, data_validate='Enter Password', type='password') }}
+
+		{{ render_input_register(name=form.student_email.name, placeholder=form.student_email.label.text, data_validate='Enter Email', type='email') }}
+
+		{{ render_input_register(name=form.student_confirm_email.name, placeholder=form.student_confirm_email.label.text, data_validate='Confirm your Email', type='email', autocomplete=false) }}
+
+		<div class="container-login100-form-btn">
+			<button class="login100-form-btn">
+				Sign Up
+			</button>
+		</div>
+		<div class="text-center p-t-90">
+			<ul>
+				<li><a class="txt1" href="{{ url_for('login') }}">Already have an account? <b>Log in</b></a></li>
+				<li><a class="txt1" href="{{ url_for('reset_password') }}">Forgot Password?</a></li>
+			</ul>
+		</div>
+	</form>
+
+{% block custom_script %}
+<script src="{{ url_for('static', filename='assets/custom/functions.js') }}"></script>
+{% endblock %}
+
+{% endblock %}

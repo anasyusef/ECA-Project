@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% from 'macro.html' import render_flashed_messages %}
+
+{% block content %}
+
+<div class="content">
+            <div class="container-fluid">
+                {{ render_flashed_messages() }}
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card ">
+                            <div class="card-header ">
+                                <h4 class="card-title">Overall Attendance</h4>
+                            </div>
+                            <div class="card-body ">
+                                <div id="chartPreferences" class="ct-chart ct-perfect-fourth"></div>
+                            </div>
+                            <div class="card-footer ">
+                                <div class="legend">
+                                    <i class="fa fa-circle text-success"></i> Yes
+                                    <i class="fa fa-circle text-danger"></i> No
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-8"/>
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2 class="card-title text-center">Your ECAs</h2>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive table-full-width">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <th>ECA Name</th>
+                                                <th>Day</th>
+                                                <th>Time</th>
+                                                <th>Organiser</th>
+                                                <th>Location</th>
+                                            </thead>
+                                            <tbody>
+                                                {%- for registration in registrations_by_user -%}
+
+                                                <tr>
+                                                    <td>{{ registration.eca.name }}</td>
+                                                    <td>{{ registration.eca.datetime.day.title() }}</td>
+                                                    <td>{{ registration.eca.datetime.time }}</td>
+                                                    <td>{{ registration.eca.user.first_name }} {{ registration.eca.user.last_name }}</td>
+                                                    <td>{{ registration.eca.location }}</td>
+                                                </tr>
+                                                {% endfor %}
+
+                                                {%- for waiting_list in waiting_lists_by_user -%}
+                                                <tr>
+                                                    <td>{{ waiting_list.eca.name }} (In Waiting List)</td>
+                                                    <td>{{ waiting_list.eca.datetime.day.title() }}</td>
+                                                    <td>{{ waiting_list.eca.datetime.time }}</td>
+                                                    <td>{{ waiting_list.eca.user.first_name }} {{ waiting_list.eca.user.last_name }}</td>
+                                                    <td>{{ waiting_list.eca.location }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                </div>
+
+                            </div>
+                        </div>
+
+
+
+                    </div>
+                    <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2 class="card-title text-center">ECAs Joined</h2>
+                                </div>
+                                <div class="card-body">
+                                    <h3 class="count card-title text-center">{{ registrations_by_user|length }}</h3>
+                                </div>
+
+                            </div>
+                    </div>
+            </div>
+</div>
+
+
+{% endblock %}
+
+{% block custom_script %}
+<script src="{{ url_for('static', filename='assets/custom/counter_from_zero.js') }}"></script>
+<script>
+    var current_url_array = window.location.href.split('/');
+
+$.ajax({
+
+    type:'GET',
+    url:'/view_attendance_detail/overall/' + {{ current_user.id }},
+    timeout:2000,
+    dataType: 'json',
+    success: function(data) {
+        var dataPreferences = {
+            series: [
+                [25, 20, 20, 25]
+            ]
+        };
+
+        var optionsPreferences = {
+            donut: true,
+            donutWidth: 40,
+            startAngle: 0,
+            total: 100,
+            showLabel: false,
+            axisX: {
+                showGrid: false
+            }
+        };
+
+        Chartist.Pie('#chartPreferences', dataPreferences, optionsPreferences);
+
+        Chartist.Pie('#chartPreferences', {
+            labels: [Math.round(data['percentage_attendance_true']) + '%', Math.round(data['percentage_attendance_false']) + '%'],
+            series: [data['percentage_attendance_true'], data['percentage_attendance_false']]
+        });
+    }
+
+});
+</script>
+{% endblock %}

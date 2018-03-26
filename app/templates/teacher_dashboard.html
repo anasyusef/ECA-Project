@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% from 'macro.html' import render_flashed_messages %}
+
+{% block content %}
+
+<div class="content">
+            <div class="container-fluid">
+                {{ render_flashed_messages() }}
+                <div class="row">
+                    <div class="col-md-4"/>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title text-center">Total ECAs</h2>
+                            </div>
+                            <div class="card-body">
+                                <h3 class="count text-center">{{ num_ecas_by_user }}</h3>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2 class="card-title text-center">Your ECAs</h2>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive table-full-width">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <th>ECA Name</th>
+                                                <th>Maximum Amount of People</th>
+                                                <th>Maximum Amount of People in Waiting List</th>
+                                                <th>Day</th>
+                                                <th>Start Time</th>
+                                                <th>End Time</th>
+                                                <th>People Joined</th>
+                                                <th>Location</th>
+                                            </thead>
+                                            <tbody>
+                                                {%- for eca in ecas_by_user -%}
+                                                <tr>
+                                                    <td>{{ eca.name }}</td>
+                                                    <td>{{ eca.max_people }}</td>
+                                                    <td>{{ eca.max_waiting_list }}</td>
+                                                    <td>{{ eca.datetime.day.title() }}</td>
+                                                    <td>{{ eca.datetime.start_time }}</td>
+                                                    <td>{{ eca.datetime.end_time }}</td>
+                                                    <td>{{ eca.registration|length }}</td>
+                                                    <td>{{ eca.location }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                </div>
+
+                            </div>
+                        </div>
+
+                </div>
+                <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2 class="card-title text-center">Your ECAs</h2>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive table-full-width">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <th>ECA Name</th>
+                                                <th>Students Enrolled</th>
+                                                <th>Waiting List</th>
+                                                <th>Day</th>
+                                                <th>Start Time</th>
+                                                <th>End Time</th>
+                                                <th>People Joined</th>
+                                                <th>Location</th>
+                                            </thead>
+                                            <tbody>
+                                                {%- for eca in ecas_by_user -%}
+                                                <tr>
+                                                    <td>{{ eca.name }}</td>
+                                                    <td>{{ eca.max_people }}</td>
+                                                    <td>{{ eca.max_waiting_list }}</td>
+                                                    <td>{{ eca.datetime.day.title() }}</td>
+                                                    <td>{{ eca.datetime.start_time }}</td>
+                                                    <td>{{ eca.datetime.end_time }}</td>
+                                                    <td>{{ eca.registration|length }}</td>
+                                                    <td>{{ eca.location }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                </div>
+
+                            </div>
+                        </div>
+
+                </div>
+            </div>
+</div>
+
+{% endblock %}
+
+{% block custom_script %}
+<script src="{{ url_for('static', filename='assets/custom/counter_from_zero.js') }}"></script>
+{% endblock %}

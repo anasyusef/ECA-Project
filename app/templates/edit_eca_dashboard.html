@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% from 'macro.html' import render_flashed_messages %}
+
+{% block content %}
+
+<div class="content">
+    <div class="container-fluid">
+        {{ render_flashed_messages() }}
+        <div class="row">
+            {% for eca in ecas %}
+            <div class="{% if request.path == url_for('attendance_eca')%}col-md-5 {% else %} col-md-4{% endif %}">
+                    <div class="card">
+                        <a {% if request.path == url_for('attendance_eca')%}{% else %}href="{{ url_for('eca_name_edit', eca_name=eca.name.lower()) }}"{% endif %}}>
+                        <div class="card-header">
+                            <h3 class="card-title">{{ eca.name }} </h3>
+                        </div>
+                        <div class="card-body table-full-width table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <th>Day</th>
+                                    <th>Time</th>
+                                    <th>Students Enrolled</th>
+                                </thead>
+                                <tbody>
+                                    <td>{{ eca.datetime.day.title() }}</td>
+                                    <td>{{ eca.datetime.time }}</td>
+                                    <td>{{ eca.registration|length }}</td>
+                                </tbody>
+                            </table>
+                            {% if request.path == url_for('attendance_eca') %}
+
+                                <div class="row justify-content-center">
+                                    <div class="col-md-3 col-lg-5">
+                                        <a class="btn btn-default btn-block" href="{{ url_for('view_attendance', eca_name=eca.name.lower()) }}">View Attendance</a>
+                                    </div>
+                                    <div class="col-md-3 col-lg-5">
+                                        <a class="btn btn-default btn-block" href="{{ url_for('take_attendance', eca_name=eca.name.lower()) }}">Take Attendance</a>
+                                    </div>
+                                </div>
+
+                            {% endif %}
+                        </div>
+                        </a>
+                    </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
