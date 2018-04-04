@@ -33,10 +33,10 @@
                                 {% if current_user.role.name.lower() == 'teacher' %}
                                 <div class="row justify-content-center">
                                     <div class="col-md-4">
-                                        <a class="btn btn-default btn-block" href="{{ url_for('take_attendance', eca_name=eca.name.lower()) }}">Take Attendance</a>
+                                        <a class="btn btn-default btn-block" href="{{ url_for('attendance.take_attendance', eca_name=eca.name.lower()) }}">Take Attendance</a>
                                     </div>
                                     <div class="col-md-4">
-                                        <a class="btn btn-default btn-block" href="{{ url_for('view_attendance', eca_name=eca.name.lower()) }}">View Attendance</a>
+                                        <a class="btn btn-default btn-block" href="{{ url_for('attendance.view_attendance', eca_name=eca.name.lower()) }}">View Attendance</a>
                                     </div>
 
                                     <div class="col-md-3">
@@ -46,7 +46,7 @@
                                 {% else %}
                                 <div class="row justify-content-center">
                                     <div class="col-md-3 col-lg-5">
-                                        <a class="btn btn-default btn-block" href="{{ url_for('view_attendance', eca_name=eca.name.lower(), user_id=current_user.id) }}">View Attendance</a>
+                                        <a class="btn btn-default btn-block" href="{{ url_for('attendance.view_attendance', eca_name=eca.name.lower(), user_id=current_user.id) }}">View Attendance</a>
                                     </div>
                                     <div class="col-md-3 col-lg-5">
                                         <a class="btn btn-default btn-block" href="{{ url_for('eca.quit_eca', eca_name=eca.name.lower()) }}">Quit ECA</a>
