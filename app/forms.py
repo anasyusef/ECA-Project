@@ -3,8 +3,8 @@ from flask import flash, request
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, SelectField, TextAreaField
 from wtforms_components import TimeField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError, InputRequired
-from app.models import User, Eca
-import datetime
+from app.models import User, Eca, Registration, WaitingList
+from flask_login import current_user
 
 
 class LoginForm(FlaskForm):
@@ -29,13 +29,13 @@ class SignUpForm(FlaskForm):
     def validate_student_email(self, email):
         query = User.query.filter_by(email=email.data).first()
         if query is not None:
-            flash('Email Address already exist. Please use a different one.', 'error')
+            flash('Email Address already exist. Please use a different one.', 'danger')
             raise ValidationError('Email Address already exist. Please use a different one.')
 
     def validate_student_username(self, username):
         query = User.query.filter_by(username=username.data).first()
         if query is not None:
-            flash('Username already exist. Please use a different one.', 'error')
+            flash('Username already exist. Please use a different one.', 'danger')
             raise ValidationError('Username already exist. Please use a different one.')
 
 
@@ -89,6 +89,22 @@ class JoinEca(FlaskForm):
         if name.data == 'choose':
             raise ValidationError('Please choose an ECA')
 
+    def validate_eca_name(self, eca):
+        eca = Eca.query.filter_by(name=eca.data).first()
+        query_check = Registration.query.filter_by(user=current_user, eca=eca).first()
+        all_registrations_by_user = Registration.query.filter_by(user=current_user).all()
+        if query_check is not None:
+            flash('You cannot register for the same ECA twice', 'danger')
+            raise ValidationError()
+
+        for registration in all_registrations_by_user:
+            print(registration)
+            if registration.eca.datetime.day == eca.datetime.day:  # Checks if any of the ECA's day matches
+                # with the ones
+                # that are already registered. If there are, then a warning will be shown to the user
+                flash('You cannot register in more than one ECA in the same day', 'danger')
+                raise ValidationError()
+
 
 class EditEca(AddEca, FlaskForm):
 
@@ -97,6 +113,18 @@ class EditEca(AddEca, FlaskForm):
         for character in characters_not_valid:
             if character in name.data:
                 raise ValidationError("The following characters are not valid: {} ".format(characters_not_valid))
+
+    def validate_max_people(self, max_people):
+        eca = Eca.query.filter_by(name=request.path.split('/')[-1]).first()
+        if max_people.data < len(Registration.query.filter_by(eca=eca).all()):
+            raise ValidationError('You need to remove students already joined in order to decrease the capacity of'
+                                  ' students allowed')
+
+    def validate_max_waiting_list(self, max_waiting_list):
+        eca = Eca.query.filter_by(name=request.path.split('/')[-1]).first()
+        if max_waiting_list.data < len(WaitingList.query.filter_by(eca=eca).all()):
+            raise ValidationError('You need to remove students already joined in the waiting list in order '
+                                  'to decrease the capacity of students in the waiting list allowed')
 
 
 class NotificationEca(FlaskForm):

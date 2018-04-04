@@ -8,9 +8,8 @@
         {{ render_flashed_messages() }}
         <div class="row">
             {% for eca in ecas %}
-            <div class="{% if request.path == url_for('attendance_eca')%}col-md-5 {% else %} col-md-4{% endif %}">
+            <div class="col-md-6">
                     <div class="card">
-                        <a {% if current_user.role.name.lower() == 'teacher' %}href="{{ url_for('eca_name_edit', eca_name=eca.name.lower()) }}"{% endif %}>
                         <div class="card-header">
                             <h3 class="card-title">{{ eca.name }}</h3>
                         </div>
@@ -30,23 +29,32 @@
                                 </tbody>
                             </table>
 
-                            <div class="row justify-content-center">
-                                <div class="col-md-3 col-lg-5">
-                                    <a class="btn btn-default btn-block" href="{% if current_user.role.name.lower() == 'teacher' %}{{ url_for('view_attendance', eca_name=eca.name.lower()) }}{% else %}{{ url_for('view_attendance', eca_name=eca.name.lower(), user_id=current_user.id) }}{% endif %}">View Attendance</a>
-                                </div>
+
                                 {% if current_user.role.name.lower() == 'teacher' %}
-                                <div class="col-md-3 col-lg-5">
-                                    <a class="btn btn-default btn-block" href="{{ url_for('take_attendance', eca_name=eca.name.lower()) }}">Take Attendance</a>
+                                <div class="row justify-content-center">
+                                    <div class="col-md-4">
+                                        <a class="btn btn-default btn-block" href="{{ url_for('take_attendance', eca_name=eca.name.lower()) }}">Take Attendance</a>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <a class="btn btn-default btn-block" href="{{ url_for('view_attendance', eca_name=eca.name.lower()) }}">View Attendance</a>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <a class="btn btn-default btn-block" href="{{ url_for('eca.eca_name_edit', eca_name=eca.name.lower()) }}">Edit ECA</a>
+                                    </div>
                                 </div>
                                 {% else %}
-                                <div class="col-md-3 col-lg-5">
-                                    <a class="btn btn-default btn-block" href="{{ url_for('quit_eca', eca_name=eca.name.lower()) }}">Quit ECA</a>
+                                <div class="row justify-content-center">
+                                    <div class="col-md-3 col-lg-5">
+                                        <a class="btn btn-default btn-block" href="{{ url_for('view_attendance', eca_name=eca.name.lower(), user_id=current_user.id) }}">View Attendance</a>
+                                    </div>
+                                    <div class="col-md-3 col-lg-5">
+                                        <a class="btn btn-default btn-block" href="{{ url_for('eca.quit_eca', eca_name=eca.name.lower()) }}">Quit ECA</a>
+                                    </div>
                                 </div>
                                 {%- endif -%}
-                            </div>
 
                         </div>
-                        </a>
                     </div>
             </div>
             {% endfor %}

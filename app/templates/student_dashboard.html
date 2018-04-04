@@ -95,10 +95,19 @@
 $.ajax({
 
     type:'GET',
-    url:'/view_attendance_detail/overall/' + {{ current_user.id }},
+    url:'api/view_attendance_detail/overall/' + {{ current_user.id }},
     timeout:2000,
     dataType: 'json',
     success: function(data) {
+
+    if (data['percentage_attendance_true'] == 0 && data['percentage_attendance_false'] == 0) {
+
+        $('#chartPreferences').html('<p class="text-center font-weight-bold">There is no sufficient data to produce the graph</p>');
+
+    }
+
+    else {
+
         var dataPreferences = {
             series: [
                 [25, 20, 20, 25]
@@ -122,6 +131,7 @@ $.ajax({
             labels: [Math.round(data['percentage_attendance_true']) + '%', Math.round(data['percentage_attendance_false']) + '%'],
             series: [data['percentage_attendance_true'], data['percentage_attendance_false']]
         });
+        }
     }
 
 });

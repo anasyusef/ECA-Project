@@ -201,14 +201,14 @@ class Registration(db.Model):
     __table_args__ = (db.UniqueConstraint('user_id', 'eca_id', name='user_eca_uc'),)
 
     @staticmethod
-    def join_fake(users, eca_name):
+    def join_full_fake(eca_name):
         eca = Eca.query.filter_by(name=eca_name).first()
         if eca is None:
             return "Please enter a correct ECA"
         else:
             user_count = User.query.count()
-            for i in range(users):
-                if i != eca.max_people:
+
+            while len(eca.registration) != eca.max_people:
                     user = User.query.offset(random.randint(0, user_count - 1)).first()
                     registration_user = Registration(eca=eca, user=user)
                     db.session.add(registration_user)
@@ -216,8 +216,12 @@ class Registration(db.Model):
                         db.session.commit()
                     except IntegrityError:
                         db.session.rollback()
-                else:
-                    break
+
+    @staticmethod
+    def join_all_fake():
+        all_ecas_names = [eca_name.name for eca_name in Eca.query.all()]
+        for name in all_ecas_names:
+            Registration.join_full_fake(name)
 
     def __repr__(self):
         return "<Registration: {} -> {}>".format(self.user.username, self.eca.name)
@@ -231,7 +235,8 @@ class Attendance(db.Model):
     attended = db.Column(db.Boolean, nullable=False)
 
     def __repr__(self):
-        return "Attendance: {} -> {} | {}".format(self.user.username, self.eca.name, self.date)
+        return "Attendance: {} -> {} | {}".format(self.registration.user.username, self.registration.eca.name,
+                                                  self.date)
 
 
 class WaitingList(db.Model):
@@ -241,7 +246,6 @@ class WaitingList(db.Model):
     eca_id = db.Column('eca_id', db.ForeignKey('eca.id'), nullable=False)
     eca = db.relationship('Eca', back_populates='waiting_list')
     __table_args__ = (db.UniqueConstraint('user_id', 'eca_id', name='user_eca_uc'),)
-
 
 
 @login.user_loader

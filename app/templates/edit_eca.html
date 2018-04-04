@@ -47,10 +47,10 @@
                             <div class="row">
 
                                 {{ render.render_input(form.max_people.label, form.max_people.name, 'col-md-4',  placeholder='12',
-                                autocomplete='true', auto_label=True, errors=form.max_people.errors, required=True, value=eca.max_people, type='number') }}
+                                autocomplete='true', auto_label=True, errors=form.max_people.errors, required=True, value=eca.max_people, type='number', min=1, max=100) }}
 
                                 {{ render.render_input(form.max_waiting_list.label, form.max_waiting_list.name, 'col-md-4',  placeholder='4',
-                                autocomplete='true', auto_label=True, errors=form.max_waiting_list.errors, required=True, value=eca.max_waiting_list, type='number') }}
+                                autocomplete='true', auto_label=True, errors=form.max_waiting_list.errors, required=True, value=eca.max_waiting_list, type='number', min=0, max=100) }}
 
                             </div>
 
@@ -72,7 +72,7 @@
                             </div>
 
                             <button type="submit" class="btn btn-info btn-fill pull-right">Update ECA</button>
-                            <a class="btn btn-danger btn-fill pull-left" href="{{ url_for('delete_eca', eca_name=eca_name.lower()) }}">Delete ECA</a>
+                            <a class="btn btn-danger btn-fill pull-left" href="{{ url_for('eca.delete_eca', eca_name=eca_name.lower()) }}">Delete ECA</a>
                             <div class="clearfix"></div>
                         </form>
                     </div>
@@ -150,6 +150,63 @@
 {% endblock %}
 
 {% block custom_script %}
-<script src="{{ url_for('static', filename='assets/custom/async_functions_update.js') }}"></script>
-<script src="{{ url_for('static', filename='assets/custom/async_remove_student.js') }}"></script>
+<script>
+
+var remove_symbol = $('.btn.btn-danger.btn-simple.btn-link');
+var eca = window.location.href.split('/')[window.location.href.split('/').length - 1];
+var first_item_waiting_list = $('#waiting_list tr:eq(1)')
+var table_to_append = $('#students_enrolled tbody')
+
+
+    $(document).ready(function() {
+
+    $.ajax({
+
+        type:'GET',
+        url:'/api/eca_info',
+        timeout:2000,
+        dataType: 'json',
+        data: 'eca=' + $('#eca_name').val(),
+        success: function(data) {
+            $('#day_eca').val(data['day'].toLowerCase());
+        }
+
+    });
+
+    }
+);
+
+remove_symbol.click(function() {
+
+    $.ajax({
+
+                type: 'GET',
+                url: '/eca/delete_student/' + eca + '/',
+                timeout: 2000,
+                dataType: 'json',
+                data: 'id=' + this.id.split('-')[0] + '&action=' + this.id.split('-')[this.id.split('-').length - 1],
+                success: function (data) {
+
+                }
+
+            });
+
+            $('#' + this.id).parent().parent().fadeOut();
+
+
+
+})
+
+// Code to transfer from waiting list to enrolled list
+
+$('#students_enrolled .btn.btn-danger.btn-simple.btn-link').click(function() {
+
+    first_item_waiting_list.find('button:last').remove();
+    first_item_waiting_list.appendTo(table_to_append).show('slow');
+    first_item_waiting_list = $('#waiting_list tr:eq(1)')
+
+})
+
+</script>
+
 {% endblock %}

@@ -1,3 +1,3 @@
 <h2>Hi {{user.first_name}}!</h2>
 
-<p>In order to activate your account please click <a href="{{url_for('confirm', token=token, _external=True)}}">here</a></p>
+<p>In order to activate your account please click <a href="{{url_for('auth.confirm', token=token, _external=True)}}">here</a></p>

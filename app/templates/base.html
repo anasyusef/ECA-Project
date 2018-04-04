@@ -2,10 +2,10 @@
 
 
 {% if current_user.role.name == 'Teacher' %}
-{% set navigation = [(url_for('index'), 'Dashboard', 'chart-pie-35'), (url_for('add_eca'), 'Add ECA', 'simple-add'), (url_for('edit_eca'), 'Manage ECA', 'preferences-circle-rotate'),
-                     (url_for('attendance_eca'), 'Attendance', 'notes'), (url_for('notification_eca'), 'Notify Updates', 'notification-70')] %}
+{% set navigation = [(url_for('index'), 'Dashboard', 'chart-pie-35'), (url_for('eca.add_eca'), 'Add ECA', 'simple-add'),
+                     (url_for('eca.manage_ecas'), 'Manage ECAS', 'preferences-circle-rotate'), (url_for('eca.notification_eca'), 'Notify Updates', 'notification-70')] %}
 {% else %}
-{% set navigation = [('/', 'Dashboard', 'chart-pie-35'), ('/join_eca', 'Join ECA', 'simple-add'), (url_for('attendance_eca'), 'ECAs Joined', 'notes')] %}
+{% set navigation = [(url_for('index'), 'Dashboard', 'chart-pie-35'), (url_for('eca.join_eca'), 'Join ECA', 'simple-add'), (url_for('eca.manage_ecas'), 'ECAs Joined', 'notes')] %}
 {% endif %}
 
 <html>
@@ -77,7 +77,7 @@
                         </ul>
                         <ul class="navbar-nav ml-auto">
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('logout') }}">
+                                <a class="nav-link" href="{{ url_for('auth.logout') }}">
                                     <i class="nc-icon nc-button-power"></i>
                                     <span class="no-icon">&nbsp;&nbsp;Log out</span>
                                 </a>

@@ -19,6 +19,6 @@ def check_user_confirmed(func):
     @wraps(func)
     def func_wrapper(*args, **kwargs):
         if current_user.is_authenticated and not current_user.confirmed:
-                return redirect(url_for('unconfirmed'))
+                return redirect(url_for('auth.unconfirmed'))
         return func(*args, **kwargs)
     return func_wrapper
