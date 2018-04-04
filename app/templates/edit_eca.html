@@ -96,7 +96,7 @@
                                 <tbody>
                                 {%- for registration in eca.registration -%}
                                     <tr>
-                                        <td><a href="{{ url_for('view_attendance', eca_name=eca.name, user_id=registration.user.id) }}">{{ registration.user.first_name }} {{ registration.user.last_name }}</a></td>
+                                        <td><a href="{{ url_for('attendance.view_attendance', eca_name=eca.name, user_id=registration.user.id) }}">{{ registration.user.first_name }} {{ registration.user.last_name }}</a></td>
                                         <td class="td-actions text-right">
                                             <button id="{{ registration.user.id }}-remove" type="button" rel="tooltip" title="Remove" class="btn btn-danger btn-simple btn-link">
                                                 <i class="fa fa-times"></i>

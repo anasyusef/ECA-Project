@@ -24,10 +24,10 @@
                             <tr>
                                 <td>{{ registration.user.first_name }} {{ registration.user.last_name }}</td>
                                 <td class="td-actions text-right">
-                                    <button id="{{ registration.user.id }}-yes" type="button" rel="tooltip" title="Yes" class="btn btn-success btn-simple btn-link">
+                                    <button id="yes-{{ registration.user.id }}" type="button" rel="tooltip" title="Yes" class="btn btn-success btn-simple btn-link">
                                         <i class="fa fa-check"></i>
                                     </button>
-                                    <button id="{{ registration.user.id }}-no" type="button" rel="tooltip" title="No" class="btn btn-danger btn-simple btn-link">
+                                    <button id="no-{{ registration.user.id }}" type="button" rel="tooltip" title="No" class="btn btn-danger btn-simple btn-link">
                                         <i class="fa fa-times"></i>
                                     </button>
                                 </td>
@@ -50,14 +50,13 @@
     $(document).ready(function() {
         $('.btn-simple.btn-link').click(function () {
 
-
             $.ajax({
 
                 type: 'GET',
-                url: '/record_attendance',
+                url: '/attendance/record_attendance/' + window.location.href.split('/')[window.location.href.split('/').length - 1] +
+                '/' + this.id.split('-')[0] + '/' + this.id.split('-')[1],
                 timeout: 2000,
                 dataType: 'json',
-                data: 'eca=' + window.location.href.split('/')[window.location.href.split('/').length - 1] + '&attended=' + this.id,
 
             });
 
