@@ -1,8 +1,10 @@
-from app.api import bp
-from flask_login import current_user, login_required
-from flask import request
-from app.models import Eca, User, Registration, Attendance
 import json
+
+from flask import request
+from flask_login import current_user, login_required
+
+from app.api import bp
+from app.models import Eca, User, Registration, Attendance
 
 
 @bp.route('/view_attendance_detail/<eca_name>/<int:user_id>')
@@ -55,11 +57,12 @@ def eca_info():  # Following procedure's purpose is to deliver information to th
         email_address = eca.user.email
         students_enrolled = len(eca.registration)
         students_in_waiting_list = len(eca.waiting_list)
+        status = eca.is_active
         return json.dumps({'start_time': start_time, 'end_time': end_time,
                            'day': day.title(), 'organiser': organiser, 'location': location,
                            'students_enrolled': students_enrolled,
                            'max_people': max_people, 'students_in_waiting_list': students_in_waiting_list,
                            'max_waiting_list': max_waiting_list,
                            'brief_description': brief_description, 'essentials': essentials,
-                           'email_address': email_address})
+                           'email_address': email_address, 'status': status})
     return 'ECA not found', 404

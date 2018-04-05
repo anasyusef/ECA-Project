@@ -1,0 +1,19 @@
+<h2>Dear {{user.first_name}},</h2>
+<p>Here are the changes of this ECA:</p>
+
+<table>
+    <thead>
+    <tr>
+        <td>From</td>
+        <td>To</td>
+    </tr>
+    </thead>
+    <tbody>
+    {% for key, value in eca_info_before.items() %}
+    <tr>
+        <td>{{ key }}: {{value}}</td>
+        <td>{{eca_info_after[key]}} {% if eca_info_after[key] == value %} (Unchanged) {% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>

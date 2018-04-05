@@ -17,6 +17,10 @@ def take_attendance(eca_name):
     if eca is None:
         return "ECA Not Found", 404
 
+    if not eca.is_active:
+        flash('You cannot take attendance on this ECA since it is not active', 'danger')
+        return redirect(url_for('eca.manage_ecas'))
+
     if eca.user != current_user:
         flash("You are not allowed to take attendance on this ECA", 'danger')
         return redirect(url_for('eca.manage_ecas'))

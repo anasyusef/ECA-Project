@@ -31,6 +31,16 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label for="eca_status">Status</label>
+                                                <input id='eca_status' name='eca_status' type='text' class='form-control' disabled>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="row">
                                         <div class='col-md-4'>
                                             <div class="form-group">
@@ -99,6 +109,7 @@
                                         </div>
                                     </div>
 
+
                                     <div class="row">
                                         <div class='col-md-4'>
                                             <div class="form-group">
@@ -153,6 +164,7 @@
                         $('#eca_brief_description').val(data['brief_description']);
                         $('#eca_essentials').val(data['essentials']);
                         $('#eca_organiser_email_address').val(data['email_address']);
+                        $('#eca_status').val((data['status'] == true) ? 'Active' : 'Inactive')
 
                         if (data['students_enrolled'] == data['max_people']){
 

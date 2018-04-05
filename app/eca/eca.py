@@ -54,7 +54,7 @@ def eca_name_edit(eca_name):
     form_sort_by = SortBy()
     if eca.user != current_user:
         flash('You are not allowed to edit this ECA', 'danger')
-        return redirect('eca.edit_eca')
+        return redirect(url_for('eca.eca_name_edit'))
     # Time is converted to string in order to avoid errors while rendering the template and passing it as a value
     # to a field
     start_time_eca = eca.datetime.start_time.strftime('%H:%M')
@@ -90,6 +90,12 @@ def eca_name_edit(eca_name):
                 if form.day_eca.data in [i.datetime.day for i in Eca.query.filter_by(user=current_user).all()]:
                     flash('You cannot have two ECAs in the same day', 'danger')
                     return redirect(url_for('eca.eca_name_edit', eca_name=eca_name))
+
+            eca_info_before = {'ECA Name': eca.name, 'Capacity (Students)': eca.max_people,
+                               'Waiting List': eca.max_waiting_list, 'Day': eca.datetime.day.title(),
+                               'Essentials': eca.essentials, 'Start Time': eca.datetime.start_time,
+                               'End Time': eca.datetime.end_time, 'Status': 'Active' if eca.is_active else 'Inactive'}
+
             eca.name = form.eca_name.data
             eca.max_people = form.max_people.data
             eca.max_waiting_list = form.max_waiting_list.data
@@ -97,13 +103,25 @@ def eca_name_edit(eca_name):
             eca.essentials = form.essentials_eca.data
             eca.datetime.start_time = form.start_time_eca.data if form.start_time_eca.data else eca.datetime.start_time
             eca.datetime.end_time = form.end_time_eca.data if form.end_time_eca.data else eca.datetime.end_time
+            eca.is_active = True if form.status_eca.data.lower() == 'active' else False
             db.session.add(eca)
             db.session.commit()
+
+            eca_info_after = {'ECA Name': eca.name, 'Capacity (Students)': eca.max_people,
+                              'Waiting List': eca.max_waiting_list, 'Day': eca.datetime.day.title(),
+                              'Essentials': eca.essentials, 'Start Time': eca.datetime.start_time,
+                              'End Time': eca.datetime.end_time, 'Status': 'Active' if eca.is_active else 'Inactive'}
+            send_email('{} ECA - Update'.format(eca.name),
+                       recipients=[registration.user.email for registration in ordered_registrations],
+                       html_body='email_eca_updated',
+                       users=[registration.user for registration in ordered_registrations],
+                       eca_info_before=eca_info_before, eca_info_after=eca_info_after)
             flash("ECA has been updated successfully", "success")
             return redirect(url_for('eca.manage_ecas'))
     return render_template('edit_eca.html', form=form, eca=eca, start_time_eca=start_time_eca,
                            end_time_eca=end_time_eca, form_sort_by=form_sort_by,
-                           ordered_registrations=ordered_registrations, title='{} ECA - Edit'.format(eca.name))
+                           ordered_registrations=ordered_registrations, title='{} ECA - Edit'.format(eca.name),
+                           Attendance=Attendance)
 
 
 @bp.route('/delete/<eca_name>')
@@ -169,11 +187,15 @@ def manage_ecas():
 
     if current_user.role.name.lower() == 'teacher':
         ecas = Eca.query.filter_by(user=current_user).all()
+        title = 'Manage ECAs'
     else:
         ecas = [student_eca.eca for student_eca in Registration.query.filter_by(user=current_user).all()]
+        ecas += [student_eca.eca for student_eca in WaitingList.query.filter_by(user=current_user).all()]
+        title = 'Joined ECAs'
         # Takes all the ecas that the current user is registered to
 
-    return render_template('base_ecas_overview.html', ecas=ecas, current_user=current_user)
+    return render_template('base_ecas_overview.html', ecas=ecas, current_user=current_user,
+                           title=title, Registration=Registration)
 
 
 @bp.route('/delete_student/<eca_name>/')
@@ -260,18 +282,26 @@ def join_eca():
 @permission_required('Student')
 def quit_eca(eca_name):
     eca = Eca.query.filter_by(name=eca_name).first()
-    Registration.query.filter_by(user=current_user, eca=eca).delete()
+    if request.args.get('waiting_list') is not None:
+        WaitingList.query.filter_by(user=current_user, eca=eca).delete()
+    else:
+        Registration.query.filter_by(user=current_user, eca=eca).delete()
     db.session.commit()
     flash('You have quit the {} ECA successfully!'.format(eca.name), 'success')
     return redirect(url_for('eca.manage_ecas'))
 
+
+@bp.route('/quit/waiting_list/<eca_name>/')
+@login_required
+@permission_required('Student')
+def quit_waiting_list_eca(eca_name):
+    return redirect(url_for('eca.quit_eca', eca_name=eca_name, waiting_list=True))
+
 # TODO remove student from ECA if it has been absent for 3 ECAS consecutively
-# TODO allow student to quit from an ECA from the waiting list
 # TODO block users from registering into ECAs
 # TODO remove blocked users
 # TODO add reason for why the student was removed
 # TODO allow student to change email address
 # TODO show next ECA on the Teacher dashboard and Student Dashboard
-# TODO send email when ECA is updated, so students know the new update
 # TODO Test every single route to seal the application and finish (Look at unittest)
 # TODO mark students as not attended to the ECA if they haven't been taken attendance

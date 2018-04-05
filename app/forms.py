@@ -127,9 +127,16 @@ class JoinEca(FlaskForm):
                   'info')
             raise ValidationError()
 
+        # Validation to make sure that the student can only join in an active ECA
+
+        if not eca.is_active:
+            flash('You have joined into an ECA that is not active, therefore the ECA will need to wait until'
+                  ' will not be taking place until the organiser makes the ECA active again', 'warning')
 
 
 class EditEca(AddEca, FlaskForm):
+
+    status_eca = SelectField('Status', choices=[('active', 'Active'), ('inactive', 'Inactive')])
 
     def validate_eca_name(self, name):
         characters_not_valid = ('/', '&')

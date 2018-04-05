@@ -55,6 +55,15 @@
                             </div>
 
                             <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        {{ form.status_eca.label }}
+                                        {{ form.status_eca(class='form-control') }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
 
                                 <div class="col-md-4">
                                     <div class="form-group">
@@ -111,6 +120,11 @@
                                     <tr>
                                         <td><a href="{{ url_for('attendance.view_attendance', eca_name=eca.name, user_id=registration.user.id) }}">{{ registration.user.first_name }} {{ registration.user.last_name }}</a></td>
                                         <td class="td-actions text-right">
+                                            {% set attendance_true = Attendance.query.filter_by(registration=registration, attended=True).all()|length %}
+                                            {% set total_attendance = Attendance.query.filter_by(registration=registration).all()|length %}
+                                            {{ attendance_true }}/{{ total_attendance }}
+                                            (<div class="count">{% if total_attendance == 0 %}0{% else %}{{ ((attendance_true / total_attendance) * 100)|int }}{% endif %}</div>%)
+
                                             <button id="{{ registration.user.id }}-remove" type="button" rel="tooltip" title="Remove" class="btn btn-danger btn-simple btn-link">
                                                 <i class="fa fa-times"></i>
                                             </button>
@@ -178,6 +192,7 @@ var table_to_append = $('#students_enrolled tbody')
         data: 'eca=' + $('#eca_name').val(),
         success: function(data) {
             $('#day_eca').val(data['day'].toLowerCase());
+            $('#status_eca').val((data['status'] === true) ? 'active' : 'inactive');
         }
 
     });
@@ -226,5 +241,6 @@ remove_symbol.click(function() {
     })
 
 </script>
+<script src="{{ url_for('static', filename='assets/custom/counter_from_zero.js') }}"></script>
 
 {% endblock %}

@@ -19,10 +19,10 @@ def index():
                                    ecas_by_user=ecas_by_user, day_name_today=datetime.datetime.now().strftime('%A'),
                                    today_eca=Eca.query.filter_by(user=current_user).all())
         elif current_user.role.name.lower() == 'student':
-            registrations_by_user = Registration.query.filter_by(user=current_user).all()
-            waiting_lists_by_user = WaitingList.query.filter_by(user=current_user).all()
+            ecas_joined = Registration.query.filter_by(user=current_user).all()
+            ecas_joined += WaitingList.query.filter_by(user=current_user).all()
             return render_template('student_dashboard.html',
-                                   title="Student's Dashboard", registrations_by_user=registrations_by_user,
-                                   current_user=current_user, waiting_lists_by_user=waiting_lists_by_user)
+                                   title="Student's Dashboard", ecas_joined=ecas_joined,
+                                   current_user=current_user, Registration=Registration)
 
     return redirect(url_for('auth.login'))

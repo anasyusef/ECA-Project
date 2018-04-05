@@ -24,7 +24,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-8"/>
+                    <div class="col-md-8">
                             <div class="card">
                                 <div class="card-header">
                                     <h2 class="card-title text-center">Your ECAs</h2>
@@ -35,29 +35,21 @@
                                             <thead>
                                                 <th>ECA Name</th>
                                                 <th>Day</th>
-                                                <th>Time</th>
+                                                <th>Start Time</th>
+                                                <th>End Time</th>
                                                 <th>Organiser</th>
                                                 <th>Location</th>
                                             </thead>
                                             <tbody>
-                                                {%- for registration in registrations_by_user -%}
-
+                                                {%- for eca in ecas_joined -%}
                                                 <tr>
-                                                    <td>{{ registration.eca.name }}</td>
-                                                    <td>{{ registration.eca.datetime.day.title() }}</td>
-                                                    <td>{{ registration.eca.datetime.time }}</td>
-                                                    <td>{{ registration.eca.user.first_name }} {{ registration.eca.user.last_name }}</td>
-                                                    <td>{{ registration.eca.location }}</td>
-                                                </tr>
-                                                {% endfor %}
-
-                                                {%- for waiting_list in waiting_lists_by_user -%}
-                                                <tr>
-                                                    <td>{{ waiting_list.eca.name }} (In Waiting List)</td>
-                                                    <td>{{ waiting_list.eca.datetime.day.title() }}</td>
-                                                    <td>{{ waiting_list.eca.datetime.time }}</td>
-                                                    <td>{{ waiting_list.eca.user.first_name }} {{ waiting_list.eca.user.last_name }}</td>
-                                                    <td>{{ waiting_list.eca.location }}</td>
+                                                    <td>{{ eca.eca.name }} {%- if not eca.eca.is_active %} (Inactive) {% endif %}
+                                                        {%- if not Registration.query.filter_by(eca=eca.eca, user=current_user).first() -%} (In Waiting List) {%- endif -%}</td>
+                                                    <td>{{ eca.eca.datetime.day.title() }}</td>
+                                                    <td>{{ eca.eca.datetime.start_time }}</td>
+                                                    <td>{{ eca.eca.datetime.end_time }}</td>
+                                                    <td>{{ eca.eca.user.first_name }} {{ eca.eca.user.last_name }}</td>
+                                                    <td>{{ eca.eca.location }}</td>
                                                 </tr>
                                                 {% endfor %}
                                             </tbody>

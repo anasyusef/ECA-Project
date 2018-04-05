@@ -1,11 +1,13 @@
-from app import db, login, app
-from werkzeug.security import generate_password_hash, check_password_hash
+import datetime
+import random
+
+import forgery_py
 from flask_login import UserMixin
 from jwt import encode, decode, DecodeError, ExpiredSignatureError
-import datetime
 from sqlalchemy.exc import IntegrityError
-import forgery_py
-import random
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from app import db, login, app
 
 
 class User(UserMixin, db.Model):
@@ -147,6 +149,7 @@ class Eca(db.Model):
     brief_description = db.Column(db.String(128))
     essentials = db.Column(db.Text)
     waiting_list = db.relationship('WaitingList', back_populates='eca')
+    is_active = db.Column(db.Boolean, default=True)
 
     @staticmethod
     def generate_fake(count, username):
@@ -250,7 +253,4 @@ class WaitingList(db.Model):
 
 @login.user_loader
 def user_loader(user_id):
-    try:
-        return User.query.get(user_id)
-    except User.DoesNotExist:
-        return None
+    return User.query.get(user_id)

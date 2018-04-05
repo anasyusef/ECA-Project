@@ -11,7 +11,8 @@
             <div class="col-md-6">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">{{ eca.name }}</h3>
+                            <h3 class="card-title">{{ eca.name }} {% if not eca.is_active %} (Inactive) {% endif %}
+                            {% if current_user.role.name.lower() == 'student' and not Registration.query.filter_by(user=current_user, eca=eca).first() %}(In Waiting List){% endif %}</h3>
                         </div>
                         <div class="card-body table-full-width table-responsive">
                             <table class="table table-hover">
@@ -45,13 +46,20 @@
                                 </div>
                                 {% else %}
                                 <div class="row justify-content-center">
+                                    {% if Registration.query.filter_by(user=current_user, eca=eca).first() %}
                                     <div class="col-md-3 col-lg-5">
                                         <a class="btn btn-default btn-block" href="{{ url_for('attendance.view_attendance', eca_name=eca.name.lower(), user_id=current_user.id) }}">View Attendance</a>
                                     </div>
                                     <div class="col-md-3 col-lg-5">
                                         <a class="btn btn-default btn-block" href="{{ url_for('eca.quit_eca', eca_name=eca.name.lower()) }}">Quit ECA</a>
                                     </div>
+                                    {% else %}
+                                    <div class="col-md-8">
+                                        <a class="btn btn-default btn-block" href="{{ url_for('eca.quit_waiting_list_eca', eca_name=eca.name.lower()) }}">Quit from waiting list</a>
+                                    </div>
+                                    {% endif %}
                                 </div>
+
                                 {%- endif -%}
 
                         </div>
