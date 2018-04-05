@@ -11,6 +11,19 @@
                     <h2 class="card-title text-center">{{ eca.name }} ECA - View Attendance</h2>
                 </div>
                 <div class="card-body table-full-width table-responsive">
+                    <form method="post">
+                        {{ form.hidden_tag() }}
+                        <div class='col-md-3'>
+                            <div class="form-group">
+                                {{ form.sort_by.label }}
+                                <select class="form-control" name="{{ form.sort_by.name }}" id="{{ form.sort_by.id }}">
+                                    {% for value, choice in form.sort_by.choices %}
+                                    <option value="{{ value }}" {% if value == form.sort_by.data %} selected="selected" {% endif %}>{{ choice }}</option>
+                                    {%- endfor -%}
+                                </select>
+                            </div>
+                        </div>
+                    </form>
                     <table class="table table-hover">
                         <thead>
                         <tr>
@@ -19,7 +32,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {%- for registration in eca.registration -%}
+                        {%- for registration in ordered_registrations -%}
                             <tr>
                                 <td><a href="{{ url_for('attendance.view_attendance', eca_name=eca.name.lower(), user_id=registration.user.id) }}"> {{ registration.user.first_name }} {{ registration.user.last_name }}</a></td>
                                 <td class="td-actions text-right">
@@ -41,5 +54,14 @@
 {% endblock %}
 
 {% block custom_script %}
+<script>
+
+    $('#sort_by').on('change', function(){
+
+        this.form.submit()
+
+    })
+
+</script>
 <script src="{{ url_for('static', filename='assets/custom/counter_from_zero.js') }}"></script>
 {% endblock %}

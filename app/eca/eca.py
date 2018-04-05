@@ -1,5 +1,6 @@
 from flask import redirect, url_for, render_template
 from flask_login import login_required
+from sqlalchemy import asc, desc
 
 from app.decorators import permission_required
 from app.eca import bp
@@ -44,11 +45,13 @@ def add_eca():
 @login_required
 @permission_required('Teacher')
 def eca_name_edit(eca_name):
+
     eca_names = [eca_name.name.lower() for eca_name in Eca.query.filter_by().all()]
     if eca_name.lower() not in eca_names:
         return "ECA Not Found", 404
     form = EditEca()
     eca = Eca.query.filter_by(name=eca_name).first()
+    form_sort_by = SortBy()
     if eca.user != current_user:
         flash('You are not allowed to edit this ECA', 'danger')
         return redirect('eca.edit_eca')
@@ -57,28 +60,50 @@ def eca_name_edit(eca_name):
     start_time_eca = eca.datetime.start_time.strftime('%H:%M')
     end_time_eca = eca.datetime.end_time.strftime('%H:%M')
 
-    if form.validate_on_submit():
+    # By default the students are ordered by their first name
+    ordered_registrations = Registration.query.filter_by(eca=eca).join(User).order_by(asc(User.first_name)).all()
+    # If the user has decided to change the order, then the form.validate_on_submit() function will be triggered
+    # depending on the choice of the user the students will be sorted accordingly
 
-        # The following code checks if the day has been updated (changed), if it has it checks if the day of the ECA
-        # has already been chosen for another ECA by the same user, if it has then it throws an error saying that
-        # 'You cannot have two ECAs in the same day'
-        if not form.day_eca.data == eca.datetime.day:
-            if form.day_eca.data in [i.datetime.day for i in Eca.query.filter_by(user=current_user).all()]:
-                flash('You cannot have two ECAs in the same day', 'danger')
-                return redirect(url_for('eca.eca_name_edit', eca_name=eca_name))
-        eca.name = form.eca_name.data
-        eca.max_people = form.max_people.data
-        eca.max_waiting_list = form.max_waiting_list.data
-        eca.datetime.day = form.day_eca.data
-        eca.essentials = form.essentials_eca.data
-        eca.datetime.start_time = form.start_time_eca.data if form.start_time_eca.data else eca.datetime.start_time
-        eca.datetime.end_time = form.end_time_eca.data if form.end_time_eca.data else eca.datetime.end_time
-        db.session.add(eca)
-        db.session.commit()
-        flash("ECA has been updated successfully", "success")
-        return redirect(url_for('eca.manage_ecas'))
-    return render_template('edit_eca.html', eca_name=eca_name, form=form, eca=eca, start_time_eca=start_time_eca,
-                           end_time_eca=end_time_eca)
+    if request.form.get('sort_by') is not None:
+        if form_sort_by.validate_on_submit():
+            if form_sort_by.sort_by.data.lower() == 'first_name':
+                ordered_registrations = Registration.query.filter_by(eca=eca).join(User).\
+                    order_by(asc(User.first_name)).all()
+            elif form_sort_by.sort_by.data.lower() == 'last_name':
+                ordered_registrations = Registration.query.filter_by(eca=eca).join(User). \
+                    order_by(asc(User.last_name)).all()
+            elif form_sort_by.sort_by.data.lower() == 'highest_attendance':
+                ordered_registrations = Registration.query.filter_by(eca=eca).join(Attendance)\
+                    .order_by(desc(Attendance.attended))
+            elif form_sort_by.sort_by.data.lower() == 'lowest_attendance':
+                ordered_registrations = Registration.query.filter_by(eca=eca).join(Attendance) \
+                    .order_by(asc(Attendance.attended))
+
+    else:
+        if form.validate_on_submit():
+
+            # The following code checks if the day has been updated (changed), if it has it checks if the day of the ECA
+            # has already been chosen for another ECA by the same user, if it has then it throws an error saying that
+            # 'You cannot have two ECAs in the same day'
+            if not form.day_eca.data == eca.datetime.day:
+                if form.day_eca.data in [i.datetime.day for i in Eca.query.filter_by(user=current_user).all()]:
+                    flash('You cannot have two ECAs in the same day', 'danger')
+                    return redirect(url_for('eca.eca_name_edit', eca_name=eca_name))
+            eca.name = form.eca_name.data
+            eca.max_people = form.max_people.data
+            eca.max_waiting_list = form.max_waiting_list.data
+            eca.datetime.day = form.day_eca.data
+            eca.essentials = form.essentials_eca.data
+            eca.datetime.start_time = form.start_time_eca.data if form.start_time_eca.data else eca.datetime.start_time
+            eca.datetime.end_time = form.end_time_eca.data if form.end_time_eca.data else eca.datetime.end_time
+            db.session.add(eca)
+            db.session.commit()
+            flash("ECA has been updated successfully", "success")
+            return redirect(url_for('eca.manage_ecas'))
+    return render_template('edit_eca.html', form=form, eca=eca, start_time_eca=start_time_eca,
+                           end_time_eca=end_time_eca, form_sort_by=form_sort_by,
+                           ordered_registrations=ordered_registrations, title='{} ECA - Edit'.format(eca.name))
 
 
 @bp.route('/delete/<eca_name>')
@@ -151,7 +176,7 @@ def manage_ecas():
     return render_template('base_ecas_overview.html', ecas=ecas, current_user=current_user)
 
 
-@app.route('/eca/delete_student/<eca_name>/')
+@bp.route('/delete_student/<eca_name>/')
 @login_required
 @permission_required('Teacher')
 def delete_student(eca_name):
@@ -165,9 +190,14 @@ def delete_student(eca_name):
 
         if request.args.get('action') is not None:
             if request.args.get('action') == 'remove':
+                # Looks for the registration of this user in this ECA
                 user_registration = Registration.query.filter_by(user=user_to_delete, eca=eca_user_related)
+                # Sends an email to the user indicating that he/she has been removed from the ECA
                 send_email(subject='Removed from {} ECA'.format(eca_name), html_body='email_removed_from_eca',
                            recipients=[user_to_delete.email], user=user_to_delete, eca_name=eca_name)
+                # Deletes any attendance that this user has with this ECA
+                Attendance.query.filter_by(registration=user_registration.first()).delete()
+                # Finally, deletes the user
                 user_registration.delete()
                 # Code to remove student from waiting list and add it to the registration list
                 front_user_waiting_list = WaitingList.query.filter_by(eca=eca_user_related)
@@ -241,7 +271,7 @@ def quit_eca(eca_name):
 # TODO remove blocked users
 # TODO add reason for why the student was removed
 # TODO allow student to change email address
-# TODO order students alphabetically when shown (View Attendance, Take Attendance, etc)
-# TODO allow to filter students when viewing attendance (for example, Highest Attendance percentage)
 # TODO show next ECA on the Teacher dashboard and Student Dashboard
+# TODO send email when ECA is updated, so students know the new update
 # TODO Test every single route to seal the application and finish (Look at unittest)
+# TODO mark students as not attended to the ECA if they haven't been taken attendance

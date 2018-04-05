@@ -12,7 +12,7 @@
                 {{ render_flashed_messages() }}
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title" id="eca_title">{{ eca_name.title() }}</h3>
+                        <h3 class="card-title" id="eca_title">{{ eca.name.title() }}</h3>
                     </div>
                     <div class="card-body">
                         <form method="post">
@@ -72,7 +72,7 @@
                             </div>
 
                             <button type="submit" class="btn btn-info btn-fill pull-right">Update ECA</button>
-                            <a class="btn btn-danger btn-fill pull-left" href="{{ url_for('eca.delete_eca', eca_name=eca_name.lower()) }}">Delete ECA</a>
+                            <a class="btn btn-danger btn-fill pull-left" href="{{ url_for('eca.delete_eca', eca_name=eca.name.lower()) }}">Delete ECA</a>
                             <div class="clearfix"></div>
                         </form>
                     </div>
@@ -87,6 +87,19 @@
                         <h3 class="card-title">Students Enrolled in this ECA</h3>
                     </div>
                         <div class="card-body table-full-width table-responsive">
+                            <form method="post">
+                                {{ form_sort_by.hidden_tag() }}
+                                <div class='col-md-3'>
+                                    <div class="form-group">
+                                        {{ form_sort_by.sort_by.label }}
+                                        <select class="form-control" name="{{ form_sort_by.sort_by.name }}" id="{{ form_sort_by.sort_by.id }}">
+                                            {% for value, choice in form_sort_by.sort_by.choices %}
+                                            <option value="{{ value }}" {% if value == form_sort_by.sort_by.data %} selected="selected" {% endif %}>{{ choice }}</option>
+                                            {%- endfor -%}
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
                             <table class="table table-hover" id="students_enrolled">
                                 <thead>
                                 <tr>
@@ -94,7 +107,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {%- for registration in eca.registration -%}
+                                {%- for registration in ordered_registrations -%}
                                     <tr>
                                         <td><a href="{{ url_for('attendance.view_attendance', eca_name=eca.name, user_id=registration.user.id) }}">{{ registration.user.first_name }} {{ registration.user.last_name }}</a></td>
                                         <td class="td-actions text-right">
@@ -150,7 +163,6 @@
 <script>
 
 var remove_symbol = $('.btn.btn-danger.btn-simple.btn-link');
-var eca = window.location.href.split('/')[window.location.href.split('/').length - 1];
 var first_item_waiting_list = $('#waiting_list tr:eq(1)')
 var table_to_append = $('#students_enrolled tbody')
 
@@ -178,7 +190,7 @@ remove_symbol.click(function() {
     $.ajax({
 
                 type: 'GET',
-                url: '/eca/delete_student/' + eca + '/',
+                url: '{{ url_for('eca.delete_student', eca_name=eca.name) }}',
                 timeout: 2000,
                 dataType: 'json',
                 data: 'id=' + this.id.split('-')[0] + '&action=' + this.id.split('-')[this.id.split('-').length - 1],
@@ -204,6 +216,14 @@ remove_symbol.click(function() {
       }
 
   })
+
+// Code to submit query when the sort by dropdown is changed
+
+    $('#sort_by').on('change', function(){
+
+        this.form.submit()
+
+    })
 
 </script>
 

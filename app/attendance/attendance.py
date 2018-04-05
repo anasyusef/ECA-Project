@@ -1,6 +1,6 @@
 from flask import redirect, url_for, render_template
 from flask_login import login_required
-from sqlalchemy import desc
+from sqlalchemy import desc, asc
 
 from app.attendance import bp
 from app.decorators import permission_required
@@ -27,11 +27,31 @@ def take_attendance(eca_name):
     return render_template('take_attendance.html', eca=eca, Attendance=Attendance, today=datetime.date.today())
 
 
-@bp.route('/eca/view_attendance/<eca_name>/', defaults={'user_id': None})
+@bp.route('/eca/view_attendance/<eca_name>/', defaults={'user_id': None}, methods=['GET', 'POST'])
 @bp.route('/eca/view_attendance/<eca_name>/<int:user_id>')
 @login_required
 def view_attendance(eca_name, user_id):
     eca = Eca.query.filter_by(name=eca_name).first()
+    form = SortBy()
+    # By default the students are ordered by their first name
+    ordered_registrations = Registration.query.filter_by(eca=eca).join(User).order_by(asc(User.first_name)).all()
+    # If the user has decided to change the order, then the form.validate_on_submit() function will be triggered
+    # depending on the choice of the user the students will be sorted accordingly
+
+    if form.validate_on_submit():
+        if form.sort_by.data.lower() == 'first_name':
+            ordered_registrations = Registration.query.filter_by(eca=eca).join(User).\
+                order_by(asc(User.first_name)).all()
+        elif form.sort_by.data.lower() == 'last_name':
+            ordered_registrations = Registration.query.filter_by(eca=eca).join(User). \
+                order_by(asc(User.last_name)).all()
+        elif form.sort_by.data.lower() == 'highest_attendance':
+            ordered_registrations = Registration.query.filter_by(eca=eca).join(Attendance)\
+                .order_by(desc(Attendance.attended))
+        elif form.sort_by.data.lower() == 'lowest_attendance':
+            ordered_registrations = Registration.query.filter_by(eca=eca).join(Attendance) \
+                .order_by(asc(Attendance.attended))
+
     if user_id is not None:  # Checks if parameters were passed to the URL
         user = User.query.filter_by(id=user_id).first()  # If parameters were passed then find the
         # value of the parameter and check if it is on the database,
@@ -52,7 +72,8 @@ def view_attendance(eca_name, user_id):
                     return redirect(url_for('attendance.attendance_eca'))
             return render_template('view_attendance_detail.html',
                                    attendance_info=Attendance.query.filter_by(registration=registration_user)
-                                   .order_by(desc(Attendance.date)), eca=eca, user=user)
+                                   .order_by(desc(Attendance.date)),  ordered_registrations=ordered_registrations,
+                                   user=user, eca=eca, form=form)
         else:
             if current_user.role.name.lower() == 'teacher':  # This is done for security purposes, so that students
                 # cannot see who is in an ECA and who is not
@@ -67,7 +88,8 @@ def view_attendance(eca_name, user_id):
         flash("You are not allowed to view attendance on this ECA", 'danger')
         return redirect(url_for('attendance.attendance_eca'))
 
-    return render_template('view_attendance.html', Attendance=Attendance, eca=eca)
+    return render_template('view_attendance.html', Attendance=Attendance, Registration=Registration,
+                           eca=eca, form=form, ordered_registrations=ordered_registrations)
 
 
 @bp.route('/record_attendance/<eca_name>/<attended>/<int:user_id>')

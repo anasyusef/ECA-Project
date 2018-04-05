@@ -167,3 +167,9 @@ class NotificationEca(FlaskForm):
     def validate_custom_status_notification(self, choice):
         if choice.data == "" and self.status_notification.data == "custom":
             raise ValidationError('Please enter something')
+
+
+class SortBy(FlaskForm):
+    sort_by = SelectField('Sort by', choices=[('first_name', 'First Name'), ('last_name', 'Last Name'),
+                                              ('highest_attendance', 'Highest Attendance'),
+                                              ('lowest_attendance','Lowest Attendance')])
