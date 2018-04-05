@@ -1,10 +1,11 @@
-from app.eca import bp
 from flask import redirect, url_for, render_template
+from flask_login import login_required
+
+from app.decorators import permission_required
+from app.eca import bp
+from app.emails import send_email
 from app.forms import *
 from app.models import *
-from flask_login import current_user, login_required
-from app.decorators import permission_required
-from app.emails import send_email
 
 
 @bp.route('/add_eca', methods=['GET', 'POST'])
@@ -157,7 +158,7 @@ def delete_student(eca_name):
         user_to_delete = User.query.filter_by(id=request.args.get('id')).first()
         eca_user_related = Eca.query.filter_by(name=eca_name).first()
 
-        if eca_user_related.user != current_user:  # This is to only allow the teacher that created the ECA to remvove
+        if eca_user_related.user != current_user:  # This is to only allow the teacher that created the ECA to remove
             # students from his ECA, if other teacher somehow access this link it will not be allowed to remove any
             # students from the other teacher's ECA
             return "You are not allowed to do this action", 403
@@ -177,7 +178,8 @@ def delete_student(eca_name):
                     send_email(subject='Removed from waiting list - {} ECA'.format(eca_user_related.name),
                                html_body='email_removed_from_waiting_list',
                                recipients=[front_user_waiting_list.first().user.email],
-                               user=front_user_waiting_list.first().user, eca_name=eca_name)
+                               user=front_user_waiting_list.first().user, eca_name=eca_name,
+                               transferred_to_active_list=True)
 
                     WaitingList.query.filter_by(eca=eca_user_related,
                                                 user=front_user_waiting_list.first().user).delete()
@@ -185,11 +187,11 @@ def delete_student(eca_name):
             elif request.args.get('action') == 'remove_wl':
                 user_waiting_list = WaitingList.query.filter_by(user=user_to_delete, eca=eca_user_related)
                 user_waiting_list.delete()
+                send_email(subject='Removed from waiting list - {} ECA'.format(eca_user_related.name),
+                           html_body='email_removed_from_waiting_list', recipients=[user_to_delete.email],
+                           user=user_to_delete, eca_name=eca_name, transferred_to_active_list=False)
 
         db.session.commit()
-        # TODO Send email when a student is removed from the waiting list and is not added to the active list
-        # TODO Remove the tick button from the waiting list
-        # TODO Fix the error when removing students from the waiting list, because when a student is removed from the active list, the student from the waiting list is still added
         return 'Student Removed'
 
 
@@ -209,7 +211,7 @@ def join_eca():
             try:
                 db.session.commit()
                 flash('This ECA has reached its maximum capacity of students, you will be put on the waiting list',
-                      'danger')
+                      'info')
             except IntegrityError:
                 flash('You have been already added into the waiting list of this ECA', 'danger')
                 db.session.rollback()
@@ -232,3 +234,14 @@ def quit_eca(eca_name):
     db.session.commit()
     flash('You have quit the {} ECA successfully!'.format(eca.name), 'success')
     return redirect(url_for('eca.manage_ecas'))
+
+# TODO remove student from ECA if it has been absent for 3 ECAS consecutively
+# TODO allow student to quit from an ECA from the waiting list
+# TODO block users from registering into ECAs
+# TODO remove blocked users
+# TODO add reason for why the student was removed
+# TODO allow student to change email address
+# TODO order students alphabetically when shown (View Attendance, Take Attendance, etc)
+# TODO allow to filter students when viewing attendance (for example, Highest Attendance percentage)
+# TODO show next ECA on the Teacher dashboard and Student Dashboard
+# TODO Test every single route to seal the application and finish (Look at unittest)

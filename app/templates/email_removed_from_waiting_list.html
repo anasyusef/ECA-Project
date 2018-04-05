@@ -1,2 +1,7 @@
 <h2>Dear {{ user.first_name }},</h2>
+{% if transferred_to_active_list %}
 <p>You have been removed from the waiting list and now you are a member of the {{ eca_name }} ECA</p>
+{% else %}
+<p>You have been removed from the waiting list of the {{ eca_name }} ECA. If you would like to know the reason for
+why you were removed, then please contact the organiser of this ECA</p>
+{% endif %}

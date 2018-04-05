@@ -1,10 +1,11 @@
-from flask_wtf import FlaskForm
 from flask import flash, request
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, SelectField, TextAreaField
-from wtforms_components import TimeField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError, InputRequired
-from app.models import User, Eca, Registration, WaitingList
 from flask_login import current_user
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, SelectField, TextAreaField
+from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError, InputRequired
+from wtforms_components import TimeField
+
+from app.models import User, Eca, Registration, WaitingList
 
 
 class LoginForm(FlaskForm):
@@ -85,17 +86,24 @@ class JoinEca(FlaskForm):
 
     eca_name = SelectField('ECA Name', validators=[DataRequired()])
 
-    def validate_eca_name(self, name):
-        if name.data == 'choose':
+    def validate_eca_name(self, eca):
+
+        # Validation if user chooses 'choose' as an option
+
+        if eca.data == 'choose':
             raise ValidationError('Please choose an ECA')
 
-    def validate_eca_name(self, eca):
         eca = Eca.query.filter_by(name=eca.data).first()
         query_check = Registration.query.filter_by(user=current_user, eca=eca).first()
         all_registrations_by_user = Registration.query.filter_by(user=current_user).all()
+
+        # Validation if the student is already registered in one ECA and is trying to register in the same one
+
         if query_check is not None:
             flash('You cannot register for the same ECA twice', 'danger')
             raise ValidationError()
+
+        # Validation if the student is registered in more than one ECA in the same day
 
         for registration in all_registrations_by_user:
             print(registration)
@@ -104,6 +112,21 @@ class JoinEca(FlaskForm):
                 # that are already registered. If there are, then a warning will be shown to the user
                 flash('You cannot register in more than one ECA in the same day', 'danger')
                 raise ValidationError()
+
+        # Validation if student is trying to register and the capacity of active members is reached and the capacity
+        # of the waiting list is reached or there is no waiting list
+
+        if eca.max_waiting_list == 0:
+            flash('This ECA has no waiting list and therefore if you want to join into this ECA, you'
+                  ' will need to wait until some student drops out or is removed from the ECA', 'info')
+            raise ValidationError()
+
+        elif len(WaitingList.query.filter_by(eca=eca).all()) == eca.max_waiting_list:
+            flash('This ECA has reached its waiting list capacity, if you still want to join into this'
+                  ' ECA you will nee to wait until some student drops out or is removed from the ECA',
+                  'info')
+            raise ValidationError()
+
 
 
 class EditEca(AddEca, FlaskForm):

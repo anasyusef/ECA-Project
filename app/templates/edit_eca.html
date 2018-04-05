@@ -126,13 +126,10 @@
                             <tbody>
                             {%- for waiting_list in eca.waiting_list -%}
                                 <tr>
-                                    <td><a href="{{ url_for('view_attendance', eca_name=eca.name, user_id=waiting_list.user.id) }}">{{ waiting_list.user.first_name }} {{ waiting_list.user.last_name }}</a></td>
+                                    <td><a href="{{ url_for('attendance.view_attendance', eca_name=eca.name, user_id=waiting_list.user.id) }}">{{ waiting_list.user.first_name }} {{ waiting_list.user.last_name }}</a></td>
                                     <td class="td-actions text-right">
                                         <button id="{{ waiting_list.user.id }}-remove_wl" type="button" rel="tooltip" title="Remove" class="btn btn-danger btn-simple btn-link">
                                             <i class="fa fa-times"></i>
-                                        </button>
-                                        <button id="{{ waiting_list.user.id }}-add" type="button" rel="tooltip" title="Add" class="btn btn-success btn-simple btn-link">
-                                            <i class="fa fa-plus"></i>
                                         </button>
                                     </td>
                                 </tr>
@@ -199,13 +196,14 @@ remove_symbol.click(function() {
 
 // Code to transfer from waiting list to enrolled list
 
-$('#students_enrolled .btn.btn-danger.btn-simple.btn-link').click(function() {
+  $('#students_enrolled .btn.btn-danger.btn-simple.btn-link').click(function() {
 
-    first_item_waiting_list.find('button:last').remove();
-    first_item_waiting_list.appendTo(table_to_append).show('slow');
-    first_item_waiting_list = $('#waiting_list tr:eq(1)')
+      if (first_item_waiting_list.is(':visible')) {
+          first_item_waiting_list.appendTo(table_to_append).show('slow');
+          first_item_waiting_list = $('#waiting_list tr:eq(1)');
+      }
 
-})
+  })
 
 </script>
 
