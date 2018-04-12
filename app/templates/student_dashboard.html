@@ -22,6 +22,38 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title text-center">Your next ECA</h2>
+                            </div>
+                            <div class="card-body">
+                                {% if next_eca %}
+                                <div class="table-responsive table-full-width">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <th>ECA Name</th>
+                                            <th>Day</th>
+                                            <th>Start Time</th>
+                                        </thead>
+                                        <tbody>
+
+                                            <tr>
+                                                <td>{{ next_eca.eca.name }}</td>
+                                                <td>{{ next_eca.eca.datetime.day.title() }}</td>
+                                                <td>{{ next_eca.eca.datetime.start_time }}</td>
+                                            </tr>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <hr>
+                                <h3 class="text-center">There are no active ECAs or you have not registered to an ECA yet.</h3>
+                                {% endif %}
+                            </div>
+                        </div>
+
                     </div>
 
                     <div class="col-md-8">
@@ -68,7 +100,7 @@
                                     <h2 class="card-title text-center">ECAs Joined</h2>
                                 </div>
                                 <div class="card-body">
-                                    <h3 class="count card-title text-center">{{ registrations_by_user|length }}</h3>
+                                    <h3 class="count card-title text-center">{{ Registration.query.filter_by(user=current_user).all()|length }}</h3>
                                 </div>
 
                             </div>

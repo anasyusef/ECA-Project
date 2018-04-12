@@ -1,3 +1,4 @@
+import calendar
 import datetime
 
 from flask import render_template, redirect, url_for
@@ -5,24 +6,87 @@ from flask_login import current_user
 
 from app import app
 from app.decorators import check_user_confirmed
-from app.models import Eca, Registration, WaitingList
+from app.models import Eca, Registration, WaitingList, Datetime
 
 
 @app.route('/')
 @check_user_confirmed
 def index():
     if current_user.is_authenticated:
+        today_weekday_num = datetime.datetime.today().weekday()
+        today_weekday_name = calendar.day_name[today_weekday_num]
         if current_user.role.name.lower() == 'teacher':
             ecas_by_user = Eca.query.filter_by(user=current_user).all()
+            today_eca = Eca.query.filter_by(user=current_user, is_active=True).join(Datetime).\
+                filter_by(day=today_weekday_name).first()
+
             return render_template('teacher_dashboard.html', title="Teacher's Dashboard",
-                                   num_ecas_by_user=len(ecas_by_user),
-                                   ecas_by_user=ecas_by_user, day_name_today=datetime.datetime.now().strftime('%A'),
-                                   today_eca=Eca.query.filter_by(user=current_user).all())
+                                   num_ecas_by_user=len(ecas_by_user), ecas_by_user=ecas_by_user,
+                                   next_eca=get_next_eca(ecas_by_user, today_eca))
         elif current_user.role.name.lower() == 'student':
             ecas_joined = Registration.query.filter_by(user=current_user).all()
             ecas_joined += WaitingList.query.filter_by(user=current_user).all()
+            today_eca = Registration.query.filter_by(user=current_user).join(Eca).filter_by(is_active=True).\
+                join(Datetime).filter_by(day=today_weekday_name).first()
+            if today_eca is not None:
+                today_eca = today_eca.eca
             return render_template('student_dashboard.html',
                                    title="Student's Dashboard", ecas_joined=ecas_joined,
-                                   current_user=current_user, Registration=Registration)
+                                   current_user=current_user, Registration=Registration,
+                                   next_eca=get_next_eca(ecas_joined, today_eca))
 
     return redirect(url_for('auth.login'))
+
+
+def get_next_eca(ecas, today_eca):
+
+    # This is to ensure that None will be returned if there are no ECAs created by the teacher or if there are no
+    # registrations made by the student
+    if len(ecas) == 0:
+        return None
+    # The following code will be used to get the next ECA for the student and the teacher
+    day_names = calendar.day_name[:]
+    day_nums = [i for i in range(7)]
+    # Create dictionary for the day names and the day numbers
+    day_num_names = dict(zip(day_names, day_nums))
+    if isinstance(ecas[0], Eca):
+        eca_days = [eca_day.datetime.day.title() for eca_day in ecas]
+    else:
+        eca_days = [eca_day.eca.datetime.day.title() for eca_day in ecas]
+    eca_days_nums = [day_num_names[i] for i in eca_days]
+    eca_days_nums.sort()
+    # Checks if there is an ECA today and if the time right now is less than the start time of the eca
+    # If all the conditions above are true, then the next eca will be today's ECA
+    if today_eca is not None and datetime.datetime.today().time() < today_eca.datetime.start_time:
+        next_eca = today_eca
+    else:
+        count = 0
+        count_exception = 0  # This is to increase the count when it enters into the except clause
+        while True:
+            try:
+                next_eca_num_day = eca_days_nums[eca_days_nums.index(datetime.datetime.today().weekday()) + 1 + count]
+            except IndexError:
+                if count_exception > len(eca_days_nums) - 1:  # This is to ensure that the IndexError does not get
+                    # triggered again, so instead of writing another try, except clause, I just say if the condition
+                    # above is met, then there will be no ECAs available, therefore the value of next_eca is None
+                    next_eca = None
+                    break
+                else:
+                    # If the except clause gets triggered, then it will go back to index 0 and go on from there,
+                    # for example, if it gets triggered again, then it will go to index 1 and so on.
+                    next_eca_num_day = eca_days_nums[0 + count_exception]
+                    count_exception += 1
+
+            next_eca_day_name = calendar.day_name[next_eca_num_day]
+            if isinstance(ecas[0], Eca):
+                next_eca = Eca.query.filter_by(user=current_user, is_active=True).join(Datetime). \
+                    filter_by(day=next_eca_day_name).first()
+            else:
+                next_eca = Registration.query.filter_by(user=current_user).join(Eca).filter_by(is_active=True)\
+                    .join(Datetime).filter_by(day=next_eca_day_name).first()
+            if next_eca is not None:
+                break
+            else:
+                count += 1
+
+    return next_eca

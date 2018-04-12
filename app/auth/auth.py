@@ -1,9 +1,10 @@
+from flask import redirect, url_for, render_template, get_flashed_messages
+from flask_login import current_user, login_user, logout_user, login_required
+
 from app.auth import bp
-from flask import redirect, url_for, render_template, flash, request, get_flashed_messages
+from app.emails import send_email
 from app.forms import *
 from app.models import *
-from app.emails import send_email
-from flask_login import current_user, login_user, logout_user, login_required
 from app.models import User
 
 
@@ -22,7 +23,7 @@ def login():
             next_url = request.args.get('next')
             return redirect(next_url or url_for('index'))
         else:
-            flash('Invalid password or username', 'error')
+            flash('Invalid password or username', 'danger')
 
     return render_template('login.html', form=form, title='ECA Project')
 

@@ -1,3 +1,6 @@
 <h2>Dear {{ user.first_name }},</h2>
-<p>You have been removed from the {{ eca_name }} ECA. If you want to know the reason for the action you need to
-contact the organiser of this ECA</p>
+<p>You have been removed from the {{ eca_name }} ECA.</p>
+{% if reason %}
+<p>Reason: {{ reason }}</p>
+{% endif %}
+<p>If you would like to know more about why you were removed. Please contact the organiser of this ECA</p>

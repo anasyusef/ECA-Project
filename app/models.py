@@ -191,7 +191,7 @@ class Datetime(db.Model):
     eca = db.relationship('Eca', back_populates='datetime')
 
     def __repr__(self):
-        return "<Datetime: {} {}>".format(self.day, self.time)
+        return "<Datetime: {} -> Start: {} End: {}>".format(self.day, self.start_time, self.end_time)
 
 
 class Registration(db.Model):
@@ -249,6 +249,18 @@ class WaitingList(db.Model):
     eca_id = db.Column('eca_id', db.ForeignKey('eca.id'), nullable=False)
     eca = db.relationship('Eca', back_populates='waiting_list')
     __table_args__ = (db.UniqueConstraint('user_id', 'eca_id', name='user_eca_uc'),)
+
+    @staticmethod
+    def add_waiting_list(eca_name, count):
+        user_count = User.query.count()
+        for _ in range(count):
+            user = User.query.offset(random.randint(0, user_count - 1)).first()
+            eca = Eca.query.filter_by(name=eca_name).first()
+            db.session.add(WaitingList(user=user, eca=eca))
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
 
 
 @login.user_loader

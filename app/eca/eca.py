@@ -209,14 +209,15 @@ def delete_student(eca_name):
             # students from his ECA, if other teacher somehow access this link it will not be allowed to remove any
             # students from the other teacher's ECA
             return "You are not allowed to do this action", 403
-
         if request.args.get('action') is not None:
             if request.args.get('action') == 'remove':
+
                 # Looks for the registration of this user in this ECA
                 user_registration = Registration.query.filter_by(user=user_to_delete, eca=eca_user_related)
                 # Sends an email to the user indicating that he/she has been removed from the ECA
                 send_email(subject='Removed from {} ECA'.format(eca_name), html_body='email_removed_from_eca',
-                           recipients=[user_to_delete.email], user=user_to_delete, eca_name=eca_name)
+                           recipients=[user_to_delete.email], user=user_to_delete, eca_name=eca_name,
+                           reason=request.args.get('reason'))
                 # Deletes any attendance that this user has with this ECA
                 Attendance.query.filter_by(registration=user_registration.first()).delete()
                 # Finally, deletes the user
@@ -236,14 +237,16 @@ def delete_student(eca_name):
                     WaitingList.query.filter_by(eca=eca_user_related,
                                                 user=front_user_waiting_list.first().user).delete()
                     db.session.add(new_user_registration)
+                    db.session.commit()
             elif request.args.get('action') == 'remove_wl':
                 user_waiting_list = WaitingList.query.filter_by(user=user_to_delete, eca=eca_user_related)
                 user_waiting_list.delete()
                 send_email(subject='Removed from waiting list - {} ECA'.format(eca_user_related.name),
                            html_body='email_removed_from_waiting_list', recipients=[user_to_delete.email],
-                           user=user_to_delete, eca_name=eca_name, transferred_to_active_list=False)
+                           user=user_to_delete, eca_name=eca_name, transferred_to_active_list=False,
+                           reason=request.args.get('reason'))
 
-        db.session.commit()
+                db.session.commit()
         return 'Student Removed'
 
 
@@ -281,6 +284,7 @@ def join_eca():
 @login_required
 @permission_required('Student')
 def quit_eca(eca_name):
+
     eca = Eca.query.filter_by(name=eca_name).first()
     if request.args.get('waiting_list') is not None:
         WaitingList.query.filter_by(user=current_user, eca=eca).delete()
@@ -297,11 +301,6 @@ def quit_eca(eca_name):
 def quit_waiting_list_eca(eca_name):
     return redirect(url_for('eca.quit_eca', eca_name=eca_name, waiting_list=True))
 
-# TODO remove student from ECA if it has been absent for 3 ECAS consecutively
-# TODO block users from registering into ECAs
-# TODO remove blocked users
 # TODO add reason for why the student was removed
 # TODO allow student to change email address
-# TODO show next ECA on the Teacher dashboard and Student Dashboard
 # TODO Test every single route to seal the application and finish (Look at unittest)
-# TODO mark students as not attended to the ECA if they haven't been taken attendance

@@ -177,6 +177,7 @@ class NotificationEca(FlaskForm):
 
 
 class SortBy(FlaskForm):
+
     sort_by = SelectField('Sort by', choices=[('first_name', 'First Name'), ('last_name', 'Last Name'),
                                               ('highest_attendance', 'Highest Attendance'),
-                                              ('lowest_attendance','Lowest Attendance')])
+                                              ('lowest_attendance', 'Lowest Attendance')])

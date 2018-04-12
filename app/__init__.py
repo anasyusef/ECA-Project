@@ -11,7 +11,9 @@ app.config.from_object(Config)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 login = LoginManager(app)
+login.init_app(app)
 login.login_view = 'auth.login'
+login.login_message_category = "info"
 mail = Mail(app)
 
 from app.api import bp as api_bp
