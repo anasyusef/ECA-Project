@@ -193,7 +193,7 @@
 <script>
 
 var remove_symbol = $('.btn.btn-danger.btn-simple.btn-link');
-var first_item_waiting_list = $('#waiting_list tr:eq(1)')
+var first_item_waiting_list = $('#waiting_list tbody tr:first')
 var table_to_append = $('#students_enrolled tbody')
 
 
@@ -216,6 +216,8 @@ var table_to_append = $('#students_enrolled tbody')
     }
 );
 
+
+
 remove_symbol.click(function() {
 
     $.ajax({
@@ -232,28 +234,36 @@ remove_symbol.click(function() {
 
             });
 
-            $('#' + this.id).parent().parent().fadeOut();
-
+            $('#' + this.id).parent().parent().hide('slow', function() { $('#' + this.id).parent().parent().remove() });
 
 
 })
 
+
+
+
+
 // Code to transfer from waiting list to enrolled list
+
 
   $('#students_enrolled .btn.btn-danger.btn-simple.btn-link').click(function() {
 
-      if (first_item_waiting_list.is(':visible')) {
 
-          var id = first_item_waiting_list.children().children().next().attr('id').split('_')[0]
+    first_item_waiting_list_student_name = $('#waiting_list tbody tr:first a').text()
+    first_item_waiting_list = $('#waiting_list tbody tr:first')
 
-          first_item_waiting_list.appendTo(table_to_append).show('slow');
-          // Change id of the item transferred to the active members from id-remove_wl to id-remove
-          first_item_waiting_list.children().children().next().attr('id', id)
-          first_item_waiting_list = $('#waiting_list tr:eq(1)');
 
-      }
+    if ($('#waiting_list tbody tr').length != 0) {
+
+        $('#students_enrolled').append('<tr><td><div class="alert alert-info" role="alert"><strong>' + first_item_waiting_list_student_name + '</strong>  has been added to the active member list of this ECA. Please refresh the page to see the changes</div></td></tr>').fadeIn('slow')
+
+        first_item_waiting_list.remove()
+
+
+    }
 
   })
+
 
 // Code to submit query when the sort by dropdown is changed
 

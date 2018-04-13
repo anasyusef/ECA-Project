@@ -26,7 +26,7 @@
                                     <td>{{ eca.datetime.day.title() }}</td>
                                     <td>{{ eca.datetime.start_time }}</td>
                                     <td>{{ eca.datetime.end_time }}</td>
-                                    <td>{{ eca.registration|length }}</td>
+                                    <td>{{ eca.registration|length }} {% if eca.registration|length == eca.max_people %}(Max){% endif %}</td>
                                 </tbody>
                             </table>
 
