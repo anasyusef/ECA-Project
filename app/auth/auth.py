@@ -118,6 +118,13 @@ def confirm(token):
     return redirect(url_for('index'))
 
 
+@bp.route('/change_email/<token>')
+@login_required
+def change_email(token):
+    if current_user.confirm(token):
+        flash('Your email address has been changed')
+
+
 @bp.route('/unconfirmed')
 @login_required
 def unconfirmed():
@@ -148,6 +155,13 @@ def user_profile():
                 current_user.username = form.student_username.data
                 db.session.add(current_user)
                 db.session.commit()
+            if form.student_email.data != current_user.email:
+                token = current_user.generate_confirmation()
+                send_email(subject='Change your email address', recipients=[form.student_email.data],
+                           html_body='auth/confirmation_email',
+                           token=token, user=current_user, change_email=True)
+                flash('An email verification has been sent to the email address entered. Please check your'
+                      'email and verify it. Your email address will not be changed until it is not verified', 'info')
             if current_user.check_password(form.student_new_password.data):
                 flash('New password cannot be the same as the old one', 'danger')
                 return redirect(url_for('auth.user_profile'))

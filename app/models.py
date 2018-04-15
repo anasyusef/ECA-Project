@@ -39,18 +39,14 @@ class User(UserMixin, db.Model):
         return encode({'confirm': self.id, 'exp': datetime.datetime.utcnow() +
                        datetime.timedelta(seconds=expiration)}, key=app.config['SECRET_KEY'], algorithm='HS256')
 
+    def generate_confirmation_change_email(self, email, expiration=3600):
+        return encode({'confirm': self.id, 'email':email, 'exp': datetime.datetime.utcnow() +
+                       datetime.timedelta(seconds=expiration)}, key=app.config['SECRET_KEY'], algorithm='HS256')
+
     def generate_password_token(self, expiration=3600):
         return encode({'password_reset': self.id,
                        'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=expiration)},
                       key=app.config['SECRET_KEY'], algorithm='HS256')
-
-    @staticmethod
-    def confirm_password_token(token):
-        try:
-            user_id = decode(token, key=app.config['SECRET_KEY'], algorithm='HS256').get('password_reset')
-        except (DecodeError, ExpiredSignatureError):
-            return False
-        return User.query.get(user_id)
 
     def confirm(self, token):
         try:
@@ -62,6 +58,17 @@ class User(UserMixin, db.Model):
         self.confirmed = True
         db.session.add(self)
         return True
+
+    def confirm_change_email(self, token, email):
+        pass
+
+    @staticmethod
+    def confirm_password_token(token):
+        try:
+            user_id = decode(token, key=app.config['SECRET_KEY'], algorithm='HS256').get('password_reset')
+        except (DecodeError, ExpiredSignatureError):
+            return False
+        return User.query.get(user_id)
 
     @staticmethod
     def generate_fake(users, role):
