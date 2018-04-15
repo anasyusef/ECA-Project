@@ -153,9 +153,10 @@ def user_profile():
                 #  Token is sent to the user's email
                 send_email(subject='Confirm your Account', recipients=[form.student_email.data],
                            html_body='auth/confirmation_email',
-                           token=token, user=current_user)
-                flash('You have been successfully registered! Please check your email to confirm your account',
-                      'success')
+                           token=token, user=current_user, change_email=True)
+                flash('An email verification has been sent to the new email address, please click the link sent to'
+                      'successfully change it',
+                      'info')
             if current_user.check_password(form.student_new_password.data):
                 flash('New password cannot be the same as the old one', 'danger')
                 return redirect(url_for('auth.user_profile'))
