@@ -199,6 +199,12 @@ class UpdateProfile(FlaskForm):
             if User.query.filter_by(username=username.data).first() is not None:
                 raise ValidationError('Username already exists. Please choose a different one')
 
+    def validate_student_email(self, email):
+
+        if email.data != current_user.email:
+            if User.query.filter_by(email=email.data).first() is not None:
+                raise ValidationError('Email already in use. Please choose a different one')
+
     def validate_student_old_password(self, old_password):
         if bool(old_password.data) is not False or bool(self.student_new_password.data) is not False:
             if not current_user.check_password(old_password.data):
