@@ -148,6 +148,14 @@ def user_profile():
                 current_user.username = form.student_username.data
                 db.session.add(current_user)
                 db.session.commit()
+            if form.student_email.data != current_user.email:
+                token = current_user.generate_confirmation_change_email(current_user.email, form.student_email.data)
+                #  Token is sent to the user's email
+                send_email(subject='Confirm your Account', recipients=[form.student_email.data],
+                           html_body='auth/confirmation_email',
+                           token=token, user=current_user)
+                flash('You have been successfully registered! Please check your email to confirm your account',
+                      'success')
             if current_user.check_password(form.student_new_password.data):
                 flash('New password cannot be the same as the old one', 'danger')
                 return redirect(url_for('auth.user_profile'))

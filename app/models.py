@@ -39,6 +39,11 @@ class User(UserMixin, db.Model):
         return encode({'confirm': self.id, 'exp': datetime.datetime.utcnow() +
                        datetime.timedelta(seconds=expiration)}, key=app.config['SECRET_KEY'], algorithm='HS256')
 
+    def generate_confirmation_change_email(self, current_email, new_email, expiration=3600):
+        return encode({'confirm': self.id, 'current_email': current_email, 'new_email':new_email,
+                       'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=expiration)},
+                      key=app.config['SECRET_KEY'], algorithm='HS256')
+
     def generate_password_token(self, expiration=3600):
         return encode({'password_reset': self.id,
                        'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=expiration)},
@@ -62,6 +67,7 @@ class User(UserMixin, db.Model):
         self.confirmed = True
         db.session.add(self)
         return True
+
 
     @staticmethod
     def generate_fake(users, role):
