@@ -1,3 +1,6 @@
 <h2>Hi {{user.first_name}}!</h2>
-
+{% if not change_email %}
 <p>In order to activate your account please click <a href="{{url_for('auth.confirm', token=token, _external=True)}}">here</a></p>
+{% else %}
+<p>In order to change your email address please click <a href="{{url_for('auth.confirm', token=token, _external=True)}}">here</a></p>
+{% endif %}
