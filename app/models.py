@@ -2,7 +2,7 @@ import datetime
 import random
 
 import forgery_py
-from flask_login import UserMixin
+from flask_login import UserMixin, current_user
 from jwt import encode, decode, DecodeError, ExpiredSignatureError
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -49,14 +49,6 @@ class User(UserMixin, db.Model):
                        'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=expiration)},
                       key=app.config['SECRET_KEY'], algorithm='HS256')
 
-    @staticmethod
-    def confirm_password_token(token):
-        try:
-            user_id = decode(token, key=app.config['SECRET_KEY'], algorithm='HS256').get('password_reset')
-        except (DecodeError, ExpiredSignatureError):
-            return False
-        return User.query.get(user_id)
-
     def confirm(self, token):
         try:
             decoded = decode(token, key=app.config['SECRET_KEY'], algorithm='HS256')
@@ -68,6 +60,25 @@ class User(UserMixin, db.Model):
         db.session.add(self)
         return True
 
+    def confirm_change_email(self, token):
+        try:
+            decoded = decode(token, key=app.config['SECRET_KEY'], algorithm='HS256')
+        except (DecodeError, ExpiredSignatureError):
+            return False
+        if decoded.get('confirm') != self.id:
+            return False
+        elif decoded.get('current_email') != current_user.email:
+            return False
+        else:
+            return True
+
+    @staticmethod
+    def confirm_password_token(token):
+        try:
+            user_id = decode(token, key=app.config['SECRET_KEY'], algorithm='HS256').get('password_reset')
+        except (DecodeError, ExpiredSignatureError):
+            return False
+        return User.query.get(user_id)
 
     @staticmethod
     def generate_fake(users, role):

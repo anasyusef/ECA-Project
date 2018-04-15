@@ -118,6 +118,15 @@ def confirm(token):
     return redirect(url_for('index'))
 
 
+@bp.route('/change_email/<token>')
+def change_email(token):
+    if current_user.confirm_change_email(token):
+        flash('Your email has been successfully changed!', 'success')
+        return redirect(url_for('auth.user_profile'))
+    else:
+        flash('Ups! Something happened', 'error')
+        return redirect(url_for('auth.user_profile'))
+
 @bp.route('/unconfirmed')
 @login_required
 def unconfirmed():
