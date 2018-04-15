@@ -69,8 +69,9 @@ class User(UserMixin, db.Model):
             return False
         elif decoded.get('current_email') != current_user.email:
             return False
-        else:
-            return True
+        self.email = decoded.get('new_email')
+        db.session.add(self)
+        return True
 
     @staticmethod
     def confirm_password_token(token):

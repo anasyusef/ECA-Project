@@ -122,10 +122,13 @@ def confirm(token):
 def change_email(token):
     if current_user.confirm_change_email(token):
         flash('Your email has been successfully changed!', 'success')
+        db.session.commit()
         return redirect(url_for('auth.user_profile'))
     else:
         flash('Ups! Something happened', 'error')
+        db.session.rollback()
         return redirect(url_for('auth.user_profile'))
+
 
 @bp.route('/unconfirmed')
 @login_required
