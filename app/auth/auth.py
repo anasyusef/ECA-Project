@@ -151,11 +151,24 @@ def user_profile():
             if current_user.check_password(form.student_new_password.data):
                 flash('New password cannot be the same as the old one', 'danger')
                 return redirect(url_for('auth.user_profile'))
+            # If the user has entered some data in the old password field, then the new password field must not be empty
+            # Therefore the following condition is to solve this issue
             if bool(form.student_old_password.data) is not False:
                 form.student_new_password.validate(form,
                                                    extra_validators=[DataRequired(message='Please enter new password')])
+                # If the new message has not been shown, then everything went fine and the password is going
+                # to be changed The following condition checks that there are no errors in
+                # the new password field and if there is not then the password is going to be changed
+                if bool(form.student_new_password.errors) is False:
+                    current_user.set_password(form.student_new_password.data)
+                    db.session.add(current_user)
+                    db.session.commit()
 
-            flash('Changes have been saved!', 'success') if not bool(form.errors) else None
+            # The inline if statement ensures that the notification is shown only when there is no error on the
+            # new password field, it only checks this field since all other fields have been handled properly when
+            # an error is triggered and because we have put extra validators on the new password field, which is when
+            # the old password field has some data, the extra validator is triggered.
+            flash('Changes have been saved!', 'success') if bool(form.student_new_password.errors) is False else None
 
         return render_template('user_profile.html', current_user=current_user, form=form, title='Update Profile')
     return redirect(url_for('index'))
