@@ -65,7 +65,10 @@ def get_next_eca(ecas, today_eca):
         while True:
             try:
                 next_eca_num_day = eca_days_nums[eca_days_nums.index(datetime.datetime.today().weekday()) + 1 + count]
-            except IndexError:
+            # IndexError has been put in case the index that has been set in next_eca_num_day is not found
+            # ValueError has been put in case there is no ECA today datetime.datetime.today().weekday(), so when
+            # trying to find the index of today is not gonna be found and ValueError is going to be triggered
+            except (IndexError, ValueError):
                 if count_exception > len(eca_days_nums) - 1:  # This is to ensure that the IndexError does not get
                     # triggered again, so instead of writing another try, except clause, I just say if the condition
                     # above is met, then there will be no ECAs available, therefore the value of next_eca is None

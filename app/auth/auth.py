@@ -1,5 +1,5 @@
 from flask import redirect, url_for, render_template, get_flashed_messages
-from flask_login import current_user, login_user, logout_user, login_required
+from flask_login import login_user, logout_user, login_required
 
 from app.auth import bp
 from app.emails import send_email
@@ -134,4 +134,28 @@ def resend_email():
                    html_body='auth/confirmation_email', token=token, user=current_user)
         flash('An email has been sent to {}'.format(current_user.email), 'success')
         return redirect(url_for('index'))
+    return redirect(url_for('index'))
+
+
+@bp.route('/user_profile', methods=['GET', 'POST'])
+def user_profile():
+    if current_user.is_authenticated:
+        form = UpdateProfile()
+
+        if form.validate_on_submit():
+            # Extra validators
+            if form.student_username.data != current_user.username:
+                current_user.username = form.student_username.data
+                db.session.add(current_user)
+                db.session.commit()
+            if current_user.check_password(form.student_new_password.data):
+                flash('New password cannot be the same as the old one', 'danger')
+                return redirect(url_for('auth.user_profile'))
+            if bool(form.student_old_password.data) is not False:
+                form.student_new_password.validate(form,
+                                                   extra_validators=[DataRequired(message='Please enter new password')])
+
+            flash('Changes have been saved!', 'success') if not bool(form.errors) else None
+
+        return render_template('user_profile.html', current_user=current_user, form=form, title='Update Profile')
     return redirect(url_for('index'))

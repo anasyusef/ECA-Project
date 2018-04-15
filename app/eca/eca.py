@@ -38,7 +38,7 @@ def add_eca():
 
         flash('{} ECA has been added successfully!'.format(form.eca_name.data), 'success')
 
-    return render_template('add_eca.html', form=form)
+    return render_template('add_eca.html', form=form, title='Add ECA')
 
 
 @bp.route('/update/<eca_name>', methods=['GET', 'POST'])
@@ -178,7 +178,8 @@ def notification_eca():
 
         flash('Your notification has been sent successfully!', 'success')
 
-    return render_template('eca_notification.html', form=form, reason_variables=reason_variables)
+    return render_template('eca_notification.html', form=form, reason_variables=reason_variables,
+                           title='Notify Updates')
 
 
 @bp.route('/manage_ecas')

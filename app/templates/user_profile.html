@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% import 'macro.html' as render %}
+{% from 'macro.html' import render_flashed_messages %}
+
+{% block content %}
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-10">
+                {{ render_flashed_messages() }}
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title" id="update_profile_title">Update Profile</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {{ form.hidden_tag() }}
+                            <div class="row">
+                                {{ render.render_input(form.student_username.label, form.student_username.name, 'col-md-5',  placeholder='John.Doe',
+                                autocomplete='true', auto_label=True, errors=form.student_username.errors, required=True, value=current_user.username.title()) }}
+
+                                {{ render.render_input(form.student_email.label, form.student_email.name, 'col-md-5',  placeholder='johndoe@company.com',
+                                autocomplete='true', auto_label=True, errors=form.student_email.errors, required=True, value=current_user.email, type='email') }}
+
+                            </div>
+
+                            <div class="row">
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="student_first_name">First Name</label>
+                                        <input name="student_first_name" id="student_first_name" class="form-control" type="text" value="{{ current_user.first_name }}" disabled>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="student_last_name">First Name</label>
+                                        <input name="student_last_name" id="student_last_name" class="form-control" type="text" value="{{ current_user.last_name }}" disabled>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <h3>Change Password</h3>
+                            <hr>
+                            <div class="row">
+
+                                {{ render.render_input(form.student_old_password.label, form.student_old_password.name, 'col-md-4', auto_label=True, errors=form.student_old_password.errors, type='password') }}
+
+                            </div>
+
+                            <div class="row">
+
+                                {{ render.render_input(form.student_new_password.label, form.student_new_password.name, 'col-md-4', auto_label=True, errors=form.student_new_password.errors, type='password') }}
+
+                                {{ render.render_input(form.student_confirm_password.label, form.student_confirm_password.name, 'col-md-4', auto_label=True, errors=form.student_confirm_password.errors, type='password') }}
+
+                            </div>
+
+
+                            <button type="submit" class="btn btn-info btn-fill pull-right">Update Profile</button>
+                            <div class="clearfix"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

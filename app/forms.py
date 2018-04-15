@@ -22,7 +22,7 @@ class SignUpForm(FlaskForm):
     student_password = PasswordField('Password', validators=[DataRequired()])
     student_first_name = StringField("First Name", validators=[DataRequired(), Length(min=2, max=25)])
     student_last_name = StringField("Last Name", validators=[DataRequired(), Length(min=2, max=25)])
-    student_email = StringField("Email", validators=[DataRequired(), Email(), Length(min=4, max=40)])
+    student_email = StringField("Email", validators=[DataRequired(), Email(), Length(min=4, max=50)])
     student_confirm_email = StringField("Confirm Email",
                                         validators=[DataRequired(), EqualTo('student_email',
                                                                             message="Email Address must match")])
@@ -181,3 +181,25 @@ class SortBy(FlaskForm):
     sort_by = SelectField('Sort by', choices=[('first_name', 'First Name'), ('last_name', 'Last Name'),
                                               ('highest_attendance', 'Highest Attendance'),
                                               ('lowest_attendance', 'Lowest Attendance')])
+
+
+class UpdateProfile(FlaskForm):
+
+    student_username = StringField('Username', validators=[DataRequired(), Length(min=2, max=25)])
+    student_email = StringField('Email', validators=[DataRequired(), Email()])
+    student_old_password = PasswordField('Old Password')
+    student_new_password = PasswordField('New Password')
+    student_confirm_password = PasswordField('Confirm Password',
+                                             validators=[EqualTo('student_new_password',
+                                                                 message='Passwords do not match')])
+
+    def validate_student_username(self, username):
+
+        if username.data != current_user.username:
+            if User.query.filter_by(username=username.data).first() is not None:
+                raise ValidationError('Username already exists. Please choose a different one')
+
+    def validate_student_old_password(self, old_password):
+        if bool(old_password.data) is not False or bool(self.student_new_password.data) is not False:
+            if not current_user.check_password(old_password.data):
+                raise ValidationError('Old password is incorrect')
