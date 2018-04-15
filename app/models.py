@@ -44,14 +44,6 @@ class User(UserMixin, db.Model):
                        'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=expiration)},
                       key=app.config['SECRET_KEY'], algorithm='HS256')
 
-    @staticmethod
-    def confirm_password_token(token):
-        try:
-            user_id = decode(token, key=app.config['SECRET_KEY'], algorithm='HS256').get('password_reset')
-        except (DecodeError, ExpiredSignatureError):
-            return False
-        return User.query.get(user_id)
-
     def confirm(self, token):
         try:
             decoded = decode(token, key=app.config['SECRET_KEY'], algorithm='HS256')
@@ -62,6 +54,14 @@ class User(UserMixin, db.Model):
         self.confirmed = True
         db.session.add(self)
         return True
+
+    @staticmethod
+    def confirm_password_token(token):
+        try:
+            user_id = decode(token, key=app.config['SECRET_KEY'], algorithm='HS256').get('password_reset')
+        except (DecodeError, ExpiredSignatureError):
+            return False
+        return User.query.get(user_id)
 
     @staticmethod
     def generate_fake(users, role):

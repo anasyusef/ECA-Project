@@ -26,5 +26,4 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(eca_bp)
 app.register_blueprint(attendance_bp)
 
-
 from app import routes, models

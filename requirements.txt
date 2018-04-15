@@ -1,0 +1,4 @@
+flask_migrate
+pyjwt
+wtforms_components
+pymysql
