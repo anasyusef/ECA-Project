@@ -9,6 +9,21 @@ from app.decorators import check_user_confirmed
 from app.models import Eca, Registration, WaitingList, Datetime
 
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('error.html', e=e), 404
+
+
+@app.errorhandler(403)
+def page_not_found(e):
+    return render_template('error.html', e=e), 403
+
+
+@app.errorhandler(500)
+def page_not_found(e):
+    return render_template('error.html', e=e), 500
+
+
 @app.route('/')
 @check_user_confirmed
 def index():
