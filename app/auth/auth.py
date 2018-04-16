@@ -72,12 +72,27 @@ def reset_password():
     if form.validate_on_submit():
         q = User.query.filter_by(email=form.email.data).first()
         if q is not None:
-            token = q.generate_password_token(expiration=1300)
+            token = q.generate_password_token(expiration=3600)
             send_email(subject='Reset Password', recipients=[form.email.data],
                        html_body='auth/reset_password_email', token=token, user=q)
         flash('Check your email for the instructions to reset your password', 'success')
         return redirect(url_for('index'))
-    return render_template('reset_password.html', form=form, title='Reset Password')
+    return render_template('forgot_credentials.html', form=form, title='Forgot Password')
+
+
+@bp.route('/forgot_username', methods=['GET', 'POST'])
+def forgot_username():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = EmailForgotUsername()
+    if form.validate_on_submit():
+        q = User.query.filter_by(email=form.email.data).first()
+        if q is not None:
+            send_email(subject='Username Reminder', recipients=[form.email.data],
+                       html_body='auth/forgot_username_email', user=q)
+        flash('The username has been sent to your email', 'success')
+        return redirect(url_for('index'))
+    return render_template('forgot_credentials.html', form=form, title='Forgot Username')
 
 
 @bp.route('/reset_password_request/<token>', methods=['GET', 'POST'])
@@ -87,7 +102,7 @@ def reset_password_request(token):
     q = User.confirm_password_token(token)
     form = ResetPassword()
     if not q:
-        flash('Link is invalid or expired', 'error')
+        flash('Link is invalid or expired', 'danger')
         return redirect(url_for('index'))
     if form.validate_on_submit():
         q.count_password_request = 1
@@ -110,22 +125,26 @@ def confirm(token):
         logout_user()
         flash('Please login with the appropriate user in order to confirm your account')
     elif current_user.confirmed:
-        flash('Your account is already confirmed', 'error')
+        flash('Your account is already confirmed', 'danger')
         redirect(url_for('index'))
     else:
-        flash('Link is invalid or expired', 'error')
+        flash('Link is invalid or expired', 'danger')
 
     return redirect(url_for('index'))
 
 
 @bp.route('/change_email/<token>')
 def change_email(token):
-    if current_user.confirm_change_email(token):
+    valid, new_email = current_user.confirm_change_email(token)
+    if valid:
         flash('Your email has been successfully changed!', 'success')
         db.session.commit()
         return redirect(url_for('auth.user_profile'))
-    else:
-        flash('Ups! Something happened', 'error')
+    elif current_user.email == new_email:
+        flash('Email already verified', 'info')
+        return redirect(url_for('auth.user_profile'))
+    elif not valid:
+        flash('Link is invalid or expired, please request a new email', 'danger')
         db.session.rollback()
         return redirect(url_for('auth.user_profile'))
 
@@ -167,7 +186,7 @@ def user_profile():
                            html_body='auth/confirmation_email',
                            token=token, user=current_user, change_email=True)
                 flash('An email verification has been sent to the new email address, please click the link sent to'
-                      'successfully change it',
+                      ' successfully change it',
                       'info')
             if current_user.check_password(form.student_new_password.data):
                 flash('New password cannot be the same as the old one', 'danger')

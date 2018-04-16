@@ -64,14 +64,14 @@ class User(UserMixin, db.Model):
         try:
             decoded = decode(token, key=app.config['SECRET_KEY'], algorithm='HS256')
         except (DecodeError, ExpiredSignatureError):
-            return False
+            return False, None
         if decoded.get('confirm') != self.id:
-            return False
+            return False, decoded.get('new_email')
         elif decoded.get('current_email') != current_user.email:
-            return False
+            return False, decoded.get('new_email')
         self.email = decoded.get('new_email')
         db.session.add(self)
-        return True
+        return True, decoded.get('new_email')
 
     @staticmethod
     def confirm_password_token(token):

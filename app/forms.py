@@ -45,6 +45,11 @@ class EmailResetPassword(FlaskForm):
     email = StringField('Email Address', validators=[DataRequired()])
 
 
+class EmailForgotUsername(FlaskForm):
+
+    email = StringField('Email Address', validators=[DataRequired()])
+
+
 class ResetPassword(FlaskForm):
 
     password = PasswordField('New Password', validators=[DataRequired()])
