@@ -148,7 +148,7 @@ def delete_eca(eca_name):
     eca_to_delete.delete()
     db.session.commit()
     flash('ECA has been deleted successfully', 'success')
-    return redirect(url_for('edit_eca'))
+    return redirect(url_for('eca.manage_ecas'))
 
 
 @bp.route('/notification_eca', methods=['GET', 'POST'])

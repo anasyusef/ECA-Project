@@ -14,19 +14,18 @@ class User(UserMixin, db.Model):
 
     __tablename__ = 'users'
 
-    count_password_request = 0
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), unique=True, index=True, nullable=False)
+    username = db.Column(db.String(32), unique=True, index=True, nullable=False)
     first_name = db.Column(db.String(32), nullable=False)
     last_name = db.Column(db.String(32), nullable=False)
     email = db.Column(db.String(128), unique=True, index=True, nullable=False)
     password_hash = db.Column(db.String(128))
-    role_id = db.Column('role_id', db.ForeignKey('roles.id'), nullable=False)
-    role = db.relationship('Role', back_populates='users')
     confirmed = db.Column(db.Boolean, default=False, nullable=False)
-    eca = db.relationship('Eca', back_populates='users')
-    registration = db.relationship('Registration', back_populates='users')
-    waiting_list = db.relationship('WaitingList', back_populates='users')
+    role_id = db.Column('role_id', db.ForeignKey('roles.id'), nullable=False)
+    eca = db.relationship('Eca', back_populates='user')
+    role = db.relationship('Role', back_populates='user')
+    registration = db.relationship('Registration', back_populates='user')
+    waiting_list = db.relationship('WaitingList', back_populates='user')
 
     def __repr__(self):
         return "<User {}>".format(self.username)
@@ -42,7 +41,7 @@ class User(UserMixin, db.Model):
                        datetime.timedelta(seconds=expiration)}, key=app.config['SECRET_KEY'], algorithm='HS256')
 
     def generate_confirmation_change_email(self, current_email, new_email, expiration=3600):
-        return encode({'confirm': self.id, 'current_email': current_email, 'new_email':new_email,
+        return encode({'confirm': self.id, 'current_email': current_email, 'new_email': new_email,
                        'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=expiration)},
                       key=app.config['SECRET_KEY'], algorithm='HS256')
 
@@ -130,7 +129,7 @@ class Role(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(16), nullable=False, index=True)
-    user = db.relationship('User', back_populates='roles')
+    user = db.relationship('User', back_populates='role')
 
     @staticmethod
     def insert_roles():
@@ -165,16 +164,16 @@ class Eca(db.Model):
     name = db.Column(db.String(64), unique=True, nullable=False)
     max_people = db.Column(db.Integer)
     max_waiting_list = db.Column(db.Integer)
-    datetime_id = db.Column('datetime_id', db.ForeignKey('datetimes.id'), nullable=False)
-    datetime = db.relationship('Datetime', back_populates='ecas')
     location = db.Column(db.String(64), nullable=False)
-    user_id = db.Column('user_id', db.ForeignKey('users.id'), nullable=False)
-    user = db.relationship('User', back_populates='ecas')
-    registration = db.relationship('Registration', back_populates='ecas')
     brief_description = db.Column(db.String(128))
     essentials = db.Column(db.Text)
-    waiting_list = db.relationship('WaitingList', back_populates='ecas')
     is_active = db.Column(db.Boolean, default=True)
+    user_id = db.Column('user_id', db.ForeignKey('users.id'), nullable=False)
+    datetime_id = db.Column('datetime_id', db.ForeignKey('datetimes.id'), nullable=False)
+    datetime = db.relationship('Datetime', back_populates='eca')
+    user = db.relationship('User', back_populates='eca')
+    registration = db.relationship('Registration', back_populates='eca')
+    waiting_list = db.relationship('WaitingList', back_populates='eca')
 
     @staticmethod
     def generate_fake(count, username):
@@ -216,7 +215,7 @@ class Datetime(db.Model):
     day = db.Column(db.String(16))
     start_time = db.Column(db.Time)
     end_time = db.Column(db.Time)
-    eca = db.relationship('Eca', back_populates='datetimes')
+    eca = db.relationship('Eca', back_populates='datetime')
 
     def __repr__(self):
         return "<Datetime: {} -> Start: {} End: {}>".format(self.day, self.start_time, self.end_time)
@@ -228,10 +227,10 @@ class Registration(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     eca_id = db.Column('eca_id', db.ForeignKey('ecas.id'), nullable=False)
-    eca = db.relationship('Eca', back_populates='registrations')
     user_id = db.Column('user_id', db.ForeignKey('users.id'), nullable=False)
-    user = db.relationship('User', back_populates='registrations')
-    attendance = db.relationship('Attendance', back_populates='registrations')
+    eca = db.relationship('Eca', back_populates='registration')
+    user = db.relationship('User', back_populates='registration')
+    attendance = db.relationship('Attendance', back_populates='registration')
     __table_args__ = (db.UniqueConstraint('user_id', 'eca_id', name='user_eca_uc'),)
 
     @staticmethod
@@ -266,10 +265,10 @@ class Attendance(db.Model):
     __tablename__ = 'attendances'
 
     id = db.Column(db.Integer, primary_key=True)
-    registration_id = db.Column('registration_id', db.ForeignKey('registrations.id'), nullable=False)
-    registration = db.relationship('Registration', back_populates='attendances')
     date = db.Column(db.Date, nullable=False)
     attended = db.Column(db.Boolean, nullable=False)
+    registration_id = db.Column('registration_id', db.ForeignKey('registrations.id'), nullable=False)
+    registration = db.relationship('Registration', back_populates='attendance')
 
     def __repr__(self):
         return "Attendance: {} -> {} | {}".format(self.registration.user.username, self.registration.eca.name,
@@ -282,9 +281,9 @@ class WaitingList(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column('user_id', db.ForeignKey('users.id'), nullable=False)
-    user = db.relationship('User', back_populates='waiting_lists')
+    user = db.relationship('User', back_populates='waiting_list')
     eca_id = db.Column('eca_id', db.ForeignKey('ecas.id'), nullable=False)
-    eca = db.relationship('Eca', back_populates='waiting_lists')
+    eca = db.relationship('Eca', back_populates='waiting_list')
     __table_args__ = (db.UniqueConstraint('user_id', 'eca_id', name='user_eca_uc'),)
 
     @staticmethod
@@ -303,3 +302,13 @@ class WaitingList(db.Model):
 @login.user_loader
 def user_loader(user_id):
     return User.query.get(user_id)
+
+
+def setup_db():
+    db.create_all()
+    Role.insert_roles()
+    User.add_main_users()
+    User.generate_fake(10, 'Teacher')
+    User.generate_fake(100, 'Student')
+    Eca.generate_fake(2, 'Anas.Yousef')
+    Eca.generate_fake(2, 'Teacher.Test')

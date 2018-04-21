@@ -102,8 +102,9 @@ def get_next_eca(ecas, today_eca):
             else:
                 next_eca = Registration.query.filter_by(user=current_user).join(Eca).filter_by(is_active=True)\
                     .join(Datetime).filter_by(day=next_eca_day_name).first()
-            if next_eca is not None:
-                break
-            else:
+            if next_eca is None:
                 count += 1
-    return next_eca.eca
+            try:
+                return next_eca.eca
+            except AttributeError:
+                return next_eca
