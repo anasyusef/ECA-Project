@@ -73,7 +73,7 @@ def get_next_eca(ecas, today_eca):
     # Checks if there is an ECA today and if the time right now is less than the start time of the eca
     # If all the conditions above are true, then the next eca will be today's ECA
     if today_eca is not None and datetime.datetime.today().time() < today_eca.datetime.start_time:
-        next_eca = today_eca
+        return today_eca.eca
     else:
         count = 0
         count_exception = 0  # This is to increase the count when it enters into the except clause
@@ -106,5 +106,4 @@ def get_next_eca(ecas, today_eca):
                 break
             else:
                 count += 1
-
-    return next_eca
+    return next_eca.eca

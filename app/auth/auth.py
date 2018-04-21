@@ -194,6 +194,9 @@ def user_profile():
             if bool(form.student_old_password.data) is not False:
                 form.student_new_password.validate(form,
                                                    extra_validators=[DataRequired(message='Please enter new password')])
+                current_user.set_password(form.student_new_password.data)
+                db.session.add(current_user)
+                db.session.commit()
 
             flash('Changes have been saved!', 'success') if not bool(form.errors) else None
 

@@ -12,6 +12,8 @@ from app import db, login, app
 
 class User(UserMixin, db.Model):
 
+    __tablename__ = 'users'
+
     count_password_request = 0
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, index=True, nullable=False)
@@ -19,12 +21,12 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String(32), nullable=False)
     email = db.Column(db.String(128), unique=True, index=True, nullable=False)
     password_hash = db.Column(db.String(128))
-    role_id = db.Column('role_id', db.ForeignKey('role.id'), nullable=False)
-    role = db.relationship('Role', back_populates='user')
+    role_id = db.Column('role_id', db.ForeignKey('roles.id'), nullable=False)
+    role = db.relationship('Role', back_populates='users')
     confirmed = db.Column(db.Boolean, default=False, nullable=False)
-    eca = db.relationship('Eca', back_populates='user')
-    registration = db.relationship('Registration', back_populates='user')
-    waiting_list = db.relationship('WaitingList', back_populates='user')
+    eca = db.relationship('Eca', back_populates='users')
+    registration = db.relationship('Registration', back_populates='users')
+    waiting_list = db.relationship('WaitingList', back_populates='users')
 
     def __repr__(self):
         return "<User {}>".format(self.username)
@@ -124,9 +126,11 @@ class User(UserMixin, db.Model):
 
 class Role(db.Model):
 
+    __tablename__ = 'roles'
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(16), nullable=False, index=True)
-    user = db.relationship('User', back_populates='role')
+    user = db.relationship('User', back_populates='roles')
 
     @staticmethod
     def insert_roles():
@@ -154,19 +158,22 @@ class Role(db.Model):
 
 
 class Eca(db.Model):
+
+    __tablename__ = 'ecas'
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True, nullable=False)
     max_people = db.Column(db.Integer)
     max_waiting_list = db.Column(db.Integer)
-    datetime_id = db.Column('datetime_id', db.ForeignKey('datetime.id'), nullable=False)
-    datetime = db.relationship('Datetime', back_populates='eca')
+    datetime_id = db.Column('datetime_id', db.ForeignKey('datetimes.id'), nullable=False)
+    datetime = db.relationship('Datetime', back_populates='ecas')
     location = db.Column(db.String(64), nullable=False)
-    user_id = db.Column('user_id', db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship('User', back_populates='eca')
-    registration = db.relationship('Registration', back_populates='eca')
+    user_id = db.Column('user_id', db.ForeignKey('users.id'), nullable=False)
+    user = db.relationship('User', back_populates='ecas')
+    registration = db.relationship('Registration', back_populates='ecas')
     brief_description = db.Column(db.String(128))
     essentials = db.Column(db.Text)
-    waiting_list = db.relationship('WaitingList', back_populates='eca')
+    waiting_list = db.relationship('WaitingList', back_populates='ecas')
     is_active = db.Column(db.Boolean, default=True)
 
     @staticmethod
@@ -202,23 +209,29 @@ class Eca(db.Model):
 
 
 class Datetime(db.Model):
+
+    __tablename__ = 'datetimes'
+
     id = db.Column(db.Integer, primary_key=True)
     day = db.Column(db.String(16))
     start_time = db.Column(db.Time)
     end_time = db.Column(db.Time)
-    eca = db.relationship('Eca', back_populates='datetime')
+    eca = db.relationship('Eca', back_populates='datetimes')
 
     def __repr__(self):
         return "<Datetime: {} -> Start: {} End: {}>".format(self.day, self.start_time, self.end_time)
 
 
 class Registration(db.Model):
+
+    __tablename__ = 'registrations'
+
     id = db.Column(db.Integer, primary_key=True)
-    eca_id = db.Column('eca_id', db.ForeignKey('eca.id'), nullable=False)
-    eca = db.relationship('Eca', back_populates='registration')
-    user_id = db.Column('user_id', db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship('User', back_populates='registration')
-    attendance = db.relationship('Attendance', back_populates='registration')
+    eca_id = db.Column('eca_id', db.ForeignKey('ecas.id'), nullable=False)
+    eca = db.relationship('Eca', back_populates='registrations')
+    user_id = db.Column('user_id', db.ForeignKey('users.id'), nullable=False)
+    user = db.relationship('User', back_populates='registrations')
+    attendance = db.relationship('Attendance', back_populates='registrations')
     __table_args__ = (db.UniqueConstraint('user_id', 'eca_id', name='user_eca_uc'),)
 
     @staticmethod
@@ -249,9 +262,12 @@ class Registration(db.Model):
 
 
 class Attendance(db.Model):
+
+    __tablename__ = 'attendances'
+
     id = db.Column(db.Integer, primary_key=True)
-    registration_id = db.Column('registration_id', db.ForeignKey('registration.id'), nullable=False)
-    registration = db.relationship('Registration', back_populates='attendance')
+    registration_id = db.Column('registration_id', db.ForeignKey('registrations.id'), nullable=False)
+    registration = db.relationship('Registration', back_populates='attendances')
     date = db.Column(db.Date, nullable=False)
     attended = db.Column(db.Boolean, nullable=False)
 
@@ -261,11 +277,14 @@ class Attendance(db.Model):
 
 
 class WaitingList(db.Model):
+
+    __tablename__ = 'waiting_lists'
+
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column('user_id', db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship('User', back_populates='waiting_list')
-    eca_id = db.Column('eca_id', db.ForeignKey('eca.id'), nullable=False)
-    eca = db.relationship('Eca', back_populates='waiting_list')
+    user_id = db.Column('user_id', db.ForeignKey('users.id'), nullable=False)
+    user = db.relationship('User', back_populates='waiting_lists')
+    eca_id = db.Column('eca_id', db.ForeignKey('ecas.id'), nullable=False)
+    eca = db.relationship('Eca', back_populates='waiting_lists')
     __table_args__ = (db.UniqueConstraint('user_id', 'eca_id', name='user_eca_uc'),)
 
     @staticmethod
