@@ -101,6 +101,7 @@ class JoinEca(FlaskForm):
         eca = Eca.query.filter_by(name=eca.data).first()
         query_check = Registration.query.filter_by(user=current_user, eca=eca).first()
         all_registrations_by_user = Registration.query.filter_by(user=current_user).all()
+        all_registrations_in_eca = Registration.query.filter_by(eca=eca).all()
 
         # Validation if the student is already registered in one ECA and is trying to register in the same one
 
@@ -121,7 +122,7 @@ class JoinEca(FlaskForm):
         # Validation if student is trying to register and the capacity of active members is reached and the capacity
         # of the waiting list is reached or there is no waiting list
 
-        if eca.max_waiting_list == 0:
+        if eca.max_waiting_list == 0 and len(all_registrations_in_eca) == eca.max_people:
             flash('This ECA has no waiting list and therefore if you want to join into this ECA, you'
                   ' will need to wait until some student drops out or is removed from the ECA', 'info')
             raise ValidationError()

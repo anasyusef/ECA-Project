@@ -281,9 +281,9 @@ class WaitingList(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column('user_id', db.ForeignKey('users.id'), nullable=False)
-    user = db.relationship('User', back_populates='waiting_list')
     eca_id = db.Column('eca_id', db.ForeignKey('ecas.id'), nullable=False)
     eca = db.relationship('Eca', back_populates='waiting_list')
+    user = db.relationship('User', back_populates='waiting_list')
     __table_args__ = (db.UniqueConstraint('user_id', 'eca_id', name='user_eca_uc'),)
 
     @staticmethod

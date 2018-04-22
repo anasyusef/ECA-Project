@@ -280,6 +280,12 @@ def join_eca():
             registration = Registration(user=current_user, eca=eca)
             db.session.add(registration)
             db.session.commit()
+            # Send email to notify the organiser of the ECA that a new student has joined.
+            send_email(subject="{} {} has signed up to the {} ECA".format(current_user.first_name,
+                                                                          current_user.last_name, eca.name),
+                       html_body='email_eca_signed_up', recipients=[eca.user.email], eca=eca,
+                       registered_user=current_user)
+
             flash('You have joined into {} successfully!'.format(eca.name), 'success')
 
     return render_template('join_eca.html', title='Join ECA', form=form, ecas=ecas)
