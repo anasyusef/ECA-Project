@@ -67,13 +67,13 @@ def get_next_eca(ecas, today_eca):
     if isinstance(ecas[0], Eca):
         eca_days = [eca_day.datetime.day.title() for eca_day in ecas]
     else:
-        eca_days = [eca_day.eca.datetime.day.title() for eca_day in ecas]
+        eca_days = [registration_eca_day.eca.datetime.day.title() for registration_eca_day in ecas]
     eca_days_nums = [day_num_names[i] for i in eca_days]
     eca_days_nums.sort()
     # Checks if there is an ECA today and if the time right now is less than the start time of the eca
     # If all the conditions above are true, then the next eca will be today's ECA
     if today_eca is not None and datetime.datetime.today().time() < today_eca.datetime.start_time:
-        return today_eca.eca
+        return today_eca
     else:
         count = 0
         count_exception = 0  # This is to increase the count when it enters into the except clause
@@ -95,13 +95,13 @@ def get_next_eca(ecas, today_eca):
                     next_eca_num_day = eca_days_nums[0 + count_exception]
                     count_exception += 1
 
-            next_eca_day_name = calendar.day_name[next_eca_num_day]
+            next_eca_day_name = day_names[next_eca_num_day]
             if isinstance(ecas[0], Eca):
-                next_eca = Eca.query.filter_by(user=current_user, is_active=True).join(Datetime). \
+                next_eca = Eca.query.filter_by(user=current_user, is_active=True).join(Datetime).\
                     filter_by(day=next_eca_day_name).first()
             else:
-                next_eca = Registration.query.filter_by(user=current_user).join(Eca).filter_by(is_active=True)\
-                    .join(Datetime).filter_by(day=next_eca_day_name).first()
+                next_eca = Registration.query.filter_by(user=current_user).join(Eca).filter_by(is_active=True).\
+                    join(Datetime).filter_by(day=next_eca_day_name).first()
             if next_eca is None:
                 count += 1
             try:

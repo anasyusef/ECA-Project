@@ -1,4 +1,4 @@
-from flask import redirect, url_for, render_template
+from flask import redirect, url_for, render_template, abort
 from flask_login import login_required
 from sqlalchemy import asc, desc
 
@@ -15,24 +15,23 @@ from app.models import *
 def add_eca():
     form = AddEca()
     if form.validate_on_submit():
+        # The list comprehension get the days of all the ECAs created by the current user
         if form.day_eca.data in [i.datetime.day for i in Eca.query.filter_by(user=current_user).all()]:
             flash('You cannot have two ECAs in the same day', 'danger')
             return redirect(url_for('eca.add_eca'))
-        eca = Eca(name=form.eca_name.data, max_people=form.max_people.data,
-                  max_waiting_list=form.max_waiting_list.data, location=form.location_eca.data)
-        # Following line checks if there is an existing record that has the same time and same day that the user entered
-        # this is to avoid data duplication in the database
         eca_time = Datetime.query.filter_by(day=form.day_eca.data, start_time=form.start_time_eca.data,
                                             end_time=form.end_time_eca.data).first()
+        eca = Eca(name=form.eca_name.data, max_people=form.max_people.data,
+                  max_waiting_list=form.max_waiting_list.data, location=form.location_eca.data, user=current_user,
+                  essentials=form.essentials_eca.data, brief_description=form.brief_description_eca.data)
+        # The following lines checks if there is an existing record that has the same time and same day that the
+        # user entered this is to avoid data duplication in the database
         if bool(eca_time):  # If the query returns something means that there is an existing record
             eca.datetime = eca_time   # Therefore the new eca will point to the existing one
         else:
             eca.datetime = Datetime(day=form.day_eca.data, start_time=form.start_time_eca.data,
                                     end_time=form.end_time_eca.data)  # Otherwise it will create a new
             #  record
-        eca.user = current_user
-        eca.essentials = form.essentials_eca.data
-        eca.brief_description = form.brief_description_eca.data
         db.session.add(eca)
         db.session.commit()
 
@@ -48,7 +47,7 @@ def eca_name_edit(eca_name):
 
     eca_names = [eca_name.name.lower() for eca_name in Eca.query.filter_by().all()]
     if eca_name.lower() not in eca_names:
-        return "ECA Not Found", 404
+        abort(404)
     form = EditEca()
     eca = Eca.query.filter_by(name=eca_name).first()
     form_sort_by = SortBy()
@@ -132,7 +131,7 @@ def delete_eca(eca_name):
     eca_to_delete = Eca.query.filter_by(name=eca_name)
 
     if eca_to_delete is None:
-        return "ECA Not Found", 404
+        abort(404)
 
     if eca_to_delete.first().user != current_user:
         return "You cannot delete this ECA", 403
@@ -144,7 +143,9 @@ def delete_eca(eca_name):
         send_email(subject='{} ECA has been removed'.format(eca_name.title()),
                    recipients=[user.email for user in users_related_to_ecas],
                    html_body='email_eca_removed', users=users_related_to_ecas, eca_name=eca_name.title())
-        Registration.query.filter_by(eca=eca_to_delete.first()).delete()
+        registration_to_delete = Registration.query.filter_by(eca=eca_to_delete.first())
+        Attendance.query.filter_by(registration=registration_to_delete.first()).delete()
+        registration_to_delete.delete()
     eca_to_delete.delete()
     db.session.commit()
     flash('ECA has been deleted successfully', 'success')
@@ -192,8 +193,8 @@ def manage_ecas():
         if len(ecas) == 0:
             flash('You have not created any ECA yet.', 'info')
     else:
-        ecas = [student_eca.eca for student_eca in Registration.query.filter_by(user=current_user).all()]
-        ecas += [student_eca.eca for student_eca in WaitingList.query.filter_by(user=current_user).all()]
+        ecas = Eca.query.filter_by().join(Registration).filter_by(user=current_user).all()
+        ecas += Eca.query.filter_by().join(WaitingList).filter_by(user=current_user).all()
         title = 'Joined ECAs'
         if len(ecas) == 0:
             flash('You have not joined into any ECAs yet.', 'info')
@@ -277,16 +278,17 @@ def join_eca():
                 db.session.rollback()
                 return redirect(url_for('eca.join_eca'))
         else:
-            registration = Registration(user=current_user, eca=eca)
-            db.session.add(registration)
-            db.session.commit()
+            registration = Registration(user=current_user, eca=eca)  # Instantiates a registration object from the
+            # Registration class and the required information is passed as parameters
+            db.session.add(registration)  # the object is added to the session of the database
+            db.session.commit()  # The session of the database is saved on the database
             # Send email to notify the organiser of the ECA that a new student has joined.
             send_email(subject="{} {} has signed up to the {} ECA".format(current_user.first_name,
                                                                           current_user.last_name, eca.name),
                        html_body='email_eca_signed_up', recipients=[eca.user.email], eca=eca,
                        registered_user=current_user)
 
-            flash('You have joined into {} successfully!'.format(eca.name), 'success')
+            flash('You have joined into the {} ECA successfully!'.format(eca.name), 'success')
 
     return render_template('join_eca.html', title='Join ECA', form=form, ecas=ecas)
 
@@ -300,7 +302,9 @@ def quit_eca(eca_name):
     if request.args.get('waiting_list') is not None:
         WaitingList.query.filter_by(user=current_user, eca=eca).delete()
     else:
-        Registration.query.filter_by(user=current_user, eca=eca).delete()
+        student_registration = Registration.query.filter_by(user=current_user, eca=eca)
+        Attendance.query.filter_by(registration=student_registration.first()).delete()
+        student_registration.delete()
     db.session.commit()
     flash('You have quit the {} ECA successfully!'.format(eca.name), 'success')
     return redirect(url_for('eca.manage_ecas'))
@@ -312,6 +316,4 @@ def quit_eca(eca_name):
 def quit_waiting_list_eca(eca_name):
     return redirect(url_for('eca.quit_eca', eca_name=eca_name, waiting_list=True))
 
-
-# TODO allow student/teacher to change email address
 # TODO Test every single route to seal the application and finish (Look at unittest)

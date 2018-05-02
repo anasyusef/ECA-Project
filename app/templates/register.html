@@ -8,17 +8,17 @@
 			Register
 		</span>
 
-		{{ render_input_register(name=form.student_first_name.name, placeholder=form.student_first_name.label.text, data_validate='Enter First Name') }}
+		{{ render_input_register(name=form.student_first_name.name, errors=form.student_first_name.errors, placeholder=form.student_first_name.label.text, data_validate='Enter First Name') }}
 
-		{{ render_input_register(name=form.student_last_name.name, placeholder=form.student_last_name.label.text, data_validate='Enter Last Name') }}
+		{{ render_input_register(name=form.student_last_name.name, errors=form.student_last_name.errors, placeholder=form.student_last_name.label.text, data_validate='Enter Last Name') }}
 
-		{{ render_input_register(name=form.student_username.name, placeholder=form.student_username.label.text, data_validate='Enter Username') }}
+		{{ render_input_register(name=form.student_username.name, errors=form.student_username.errors, placeholder=form.student_username.label.text, data_validate='Enter Username') }}
 
-		{{ render_input_register(name=form.student_password.name, placeholder=form.student_password.label.text, data_validate='Enter Password', type='password') }}
+		{{ render_input_register(name=form.student_password.name, errors=form.student_password.errors, placeholder=form.student_password.label.text, data_validate='Enter Password', type='password') }}
 
-		{{ render_input_register(name=form.student_email.name, placeholder=form.student_email.label.text, data_validate='Enter Email', type='email') }}
+		{{ render_input_register(name=form.student_email.name, errors=form.student_email.errors, placeholder=form.student_email.label.text, data_validate='Enter Email', type='email') }}
 
-		{{ render_input_register(name=form.student_confirm_email.name, placeholder=form.student_confirm_email.label.text, data_validate='Confirm your Email', type='email', autocomplete=false) }}
+		{{ render_input_register(name=form.student_confirm_email.name, errors=form.student_confirm_email.errors, placeholder=form.student_confirm_email.label.text, data_validate='Confirm your Email', type='email', autocomplete=false) }}
 
 		<div class="container-login100-form-btn">
 			<button class="login100-form-btn">

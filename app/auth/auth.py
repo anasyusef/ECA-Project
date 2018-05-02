@@ -39,12 +39,15 @@ def register():
     form = SignUpForm()
     if form.validate_on_submit():
         #  Student information except password being prepared to be added to the database
-        student = User()
-        student.username = form.student_username.data.lower()
+        student = User()  # Instantiate an object from the User class, which means that a record is going to be added
+        # to the users table
+        student.username = form.student_username.data.lower() # It assigns the username of the student and it makes
+        # sure that is in lowercase to avoid case-sensitivity. This is done with the lower() method
         student.first_name = form.student_first_name.data
         student.last_name = form.student_last_name.data
         student.email = form.student_email.data
-        student.role = Role.query.filter_by(name="Student").first()
+        student.role = Role.query.filter_by(name="Student").first()  # It looks for the Student role in the database
+        # and it assigns that role to the user registering on the website
         #  Student password being hashed with salt being prepared to be added to the database
         student.set_password(form.student_password.data)
         #  Student information being added to the session of the database
@@ -99,16 +102,19 @@ def forgot_username():
 def reset_password_request(token):
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    q = User.confirm_password_token(token)
+    q = User.confirm_password_token(token)  # id of the user requesting to change the password is gotten from the
+    #  confirm_password_token() method, since the id of the user is encrypted on the token that was sent through
+    # the email
     form = ResetPassword()
     if not q:
         flash('Link is invalid or expired', 'danger')
         return redirect(url_for('index'))
     if form.validate_on_submit():
-        q.count_password_request = 1
-        q.set_password(form.password.data)
-        db.session.add(q)
-        db.session.commit()
+        q.set_password(form.password.data)  # form.password.data is the value of the password field, so this method
+        # hashes the new password entered by the user and assigns it to the password_hash field on the database for the
+        # appropiate user
+        db.session.add(q)  # To add the new updated user to the session to the database
+        db.session.commit()  # To save changes made on the database
         flash('Your password has been successfully changed!', 'success')
         return redirect(url_for('index'))
     return render_template('reset_password_request.html', form=form, title='Change Password')

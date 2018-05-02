@@ -112,7 +112,6 @@ class JoinEca(FlaskForm):
         # Validation if the student is registered in more than one ECA in the same day
 
         for registration in all_registrations_by_user:
-            print(registration)
             if registration.eca.datetime.day == eca.datetime.day:  # Checks if any of the ECA's day matches
                 # with the ones
                 # that are already registered. If there are, then a warning will be shown to the user
@@ -127,17 +126,18 @@ class JoinEca(FlaskForm):
                   ' will need to wait until some student drops out or is removed from the ECA', 'info')
             raise ValidationError()
 
-        elif len(WaitingList.query.filter_by(eca=eca).all()) == eca.max_waiting_list:
+        elif len(WaitingList.query.filter_by(eca=eca).all()) == eca.max_waiting_list and \
+                len(all_registrations_in_eca) == eca.max_people:
             flash('This ECA has reached its waiting list capacity, if you still want to join into this'
-                  ' ECA you will nee to wait until some student drops out or is removed from the ECA',
+                  ' ECA you will need to wait until some student drops out or is removed from the ECA',
                   'info')
             raise ValidationError()
 
         # Validation to make sure that the student can only join in an active ECA
 
         if not eca.is_active:
-            flash('You have joined into an ECA that is not active, therefore the ECA will need to wait until'
-                  ' will not be taking place until the organiser makes the ECA active again', 'warning')
+            flash('You have joined into an ECA that is not active, therefore it will not be taking place until'
+                  ' the organiser makes the ECA active again.', 'warning')
 
 
 class EditEca(AddEca, FlaskForm):
@@ -145,6 +145,12 @@ class EditEca(AddEca, FlaskForm):
     status_eca = SelectField('Status', choices=[('active', 'Active'), ('inactive', 'Inactive')])
 
     def validate_eca_name(self, name):
+        eca_name = request.path.split('/')[-1]
+        if name.data.lower() != eca_name.lower():
+            query = Eca.query.filter_by(name=name.data).first()
+            if query is not None:
+                raise ValidationError('ECA already exists. Please choose a different one.')
+
         characters_not_valid = ('/', '&')
         for character in characters_not_valid:
             if character in name.data:
@@ -201,7 +207,7 @@ class UpdateProfile(FlaskForm):
 
     def validate_student_username(self, username):
 
-        if username.data != current_user.username:
+        if username.data.lower() != current_user.username.lower():
             if User.query.filter_by(username=username.data).first() is not None:
                 raise ValidationError('Username already exists. Please choose a different one')
 
@@ -212,6 +218,7 @@ class UpdateProfile(FlaskForm):
                 raise ValidationError('Email already in use. Please choose a different one')
 
     def validate_student_old_password(self, old_password):
+
         if bool(old_password.data) is not False or bool(self.student_new_password.data) is not False:
             if not current_user.check_password(old_password.data):
                 raise ValidationError('Old password is incorrect')

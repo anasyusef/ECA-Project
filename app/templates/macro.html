@@ -23,7 +23,7 @@
 </div>
 {%- endmacro -%}
 
-{%- macro render_input_register(name, data_validate, type='text', div_class='wrap-input100 validate-input', class_input='input100') -%}
+{%- macro render_input_register(name, data_validate, errors, type='text', div_class='wrap-input100 validate-input', class_input='input100') -%}
 
 <div class="{{ div_class }}" data-validate="{{ data_validate }}">
 	<input class='{{ class_input }}' id='{{ name }}' name='{{ name }}' type='{{ type }}'
@@ -33,6 +33,9 @@
 				{%- endfor -%}
 		{%- endif -%} />
 	<span class="focus-input100"></span>
+	{% for error in errors %} {#- This is to show the errors for individual fields -#}
+  			<p class='text-danger'>{{ error }}</p>
+		{% endfor %}
 </div>
 
 {%- endmacro -%}

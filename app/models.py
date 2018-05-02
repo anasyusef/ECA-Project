@@ -172,7 +172,7 @@ class Eca(db.Model):
     datetime_id = db.Column('datetime_id', db.ForeignKey('datetimes.id'), nullable=False)
     datetime = db.relationship('Datetime', back_populates='eca')
     user = db.relationship('User', back_populates='eca')
-    registration = db.relationship('Registration', back_populates='eca')
+    registration = db.relationship('Registration', back_populates='eca', cascade="all,delete")
     waiting_list = db.relationship('WaitingList', back_populates='eca')
 
     @staticmethod
@@ -228,7 +228,7 @@ class Registration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     eca_id = db.Column('eca_id', db.ForeignKey('ecas.id'), nullable=False)
     user_id = db.Column('user_id', db.ForeignKey('users.id'), nullable=False)
-    eca = db.relationship('Eca', back_populates='registration')
+    eca = db.relationship('Eca', back_populates='registration', cascade="all,delete")
     user = db.relationship('User', back_populates='registration')
     attendance = db.relationship('Attendance', back_populates='registration')
     __table_args__ = (db.UniqueConstraint('user_id', 'eca_id', name='user_eca_uc'),)

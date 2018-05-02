@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-
+{# Set menu #}
 {% if current_user.role.name == 'Teacher' %}
 {% set navigation = [(url_for('index'), 'Dashboard', 'chart-pie-35'), (url_for('eca.add_eca'), 'Add ECA', 'simple-add'),
                      (url_for('eca.manage_ecas'), 'Manage ECAS', 'preferences-circle-rotate'), (url_for('eca.notification_eca'), 'Notify Updates', 'notification-70'),
@@ -9,6 +9,7 @@
 {% set navigation = [(url_for('index'), 'Dashboard', 'chart-pie-35'), (url_for('eca.join_eca'), 'Join ECA', 'simple-add'), (url_for('eca.manage_ecas'), 'ECAs Joined', 'notes'),
 					 (url_for('auth.user_profile'), 'Update Profile', 'circle-09')] %}
 {% endif %}
+{# Set menu #}
 
 <html>
 
