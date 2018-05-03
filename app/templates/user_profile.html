@@ -17,11 +17,11 @@
                         <form method="post">
                             {{ form.hidden_tag() }}
                             <div class="row">
-                                {{ render.render_input(form.student_username.label, form.student_username.name, 'col-md-5',  placeholder='John.Doe',
-                                autocomplete='true', auto_label=True, errors=form.student_username.errors, required=True, value=current_user.username.title()) }}
+                                {{ render.render_input(form.username.label, form.username.name, 'col-md-5',  placeholder='John.Doe',
+                                autocomplete='true', auto_label=True, errors=form.username.errors, required=True, value=current_user.username.title()) }}
 
-                                {{ render.render_input(form.student_email.label, form.student_email.name, 'col-md-5',  placeholder='johndoe@company.com',
-                                autocomplete='true', auto_label=True, errors=form.student_email.errors, required=True, value=current_user.email, type='email') }}
+                                {{ render.render_input(form.email.label, form.email.name, 'col-md-5',  placeholder='johndoe@company.com',
+                                autocomplete='true', auto_label=True, errors=form.email.errors, required=True, value=current_user.email, type='email') }}
 
                             </div>
 
@@ -29,15 +29,15 @@
 
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="student_first_name">First Name</label>
-                                        <input name="student_first_name" id="student_first_name" class="form-control" type="text" value="{{ current_user.first_name }}" disabled>
+                                        <label for="first_name">First Name</label>
+                                        <input name="first_name" id="first_name" class="form-control" type="text" value="{{ current_user.first_name }}" disabled>
                                     </div>
                                 </div>
 
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="student_last_name">Last Name</label>
-                                        <input name="student_last_name" id="student_last_name" class="form-control" type="text" value="{{ current_user.last_name }}" disabled>
+                                        <label for="last_name">Last Name</label>
+                                        <input name="last_name" id="last_name" class="form-control" type="text" value="{{ current_user.last_name }}" disabled>
                                     </div>
                                 </div>
 
@@ -46,15 +46,15 @@
                             <hr>
                             <div class="row">
 
-                                {{ render.render_input(form.student_old_password.label, form.student_old_password.name, 'col-md-4', auto_label=True, errors=form.student_old_password.errors, type='password') }}
+                                {{ render.render_input(form.old_password.label, form.old_password.name, 'col-md-4', auto_label=True, errors=form.old_password.errors, type='password') }}
 
                             </div>
 
                             <div class="row">
 
-                                {{ render.render_input(form.student_new_password.label, form.student_new_password.name, 'col-md-4', auto_label=True, errors=form.student_new_password.errors, type='password') }}
+                                {{ render.render_input(form.new_password.label, form.new_password.name, 'col-md-4', auto_label=True, errors=form.new_password.errors, type='password') }}
 
-                                {{ render.render_input(form.student_confirm_password.label, form.student_confirm_password.name, 'col-md-4', auto_label=True, errors=form.student_confirm_password.errors, type='password') }}
+                                {{ render.render_input(form.confirm_password.label, form.confirm_password.name, 'col-md-4', auto_label=True, errors=form.confirm_password.errors, type='password') }}
 
                             </div>
 

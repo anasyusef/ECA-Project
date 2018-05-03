@@ -202,7 +202,7 @@ class UpdateProfile(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     old_password = PasswordField('Old Password')
     new_password = PasswordField('New Password')
-    confirm_password = PasswordField('Confirm Password',validators=[EqualTo('student_new_password',
+    confirm_password = PasswordField('Confirm Password',validators=[EqualTo('new_password',
                                                                             message='Passwords do not match')])
 
     def validate(self):
