@@ -1,4 +1,4 @@
-from flask import render_template, abort
+from flask import render_template, abort, redirect, url_for
 from flask_login import login_required
 from sqlalchemy import asc, desc
 
@@ -317,5 +317,3 @@ def quit_eca(eca_name):
 @permission_required('Student')
 def quit_waiting_list_eca(eca_name):
     return redirect(url_for('eca.quit_eca', eca_name=eca_name, waiting_list=True))
-
-# TODO Test every single route to seal the application and finish (Look at unittest)

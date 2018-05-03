@@ -1,4 +1,4 @@
-from flask import render_template, get_flashed_messages
+from flask import redirect, url_for, render_template, get_flashed_messages
 from flask_login import login_user, logout_user, login_required
 
 from app.auth import bp
