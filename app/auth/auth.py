@@ -1,8 +1,7 @@
-from flask import redirect, url_for, render_template, get_flashed_messages
+from flask import render_template, get_flashed_messages
 from flask_login import login_user, logout_user, login_required
 
 from app.auth import bp
-from app.emails import send_email
 from app.forms import *
 from app.models import *
 from app.models import User
@@ -180,31 +179,7 @@ def user_profile():
         form = UpdateProfile()
 
         if form.validate_on_submit():
-            # Extra validators
-            if form.student_username.data != current_user.username:
-                current_user.username = form.student_username.data
-                db.session.add(current_user)
-                db.session.commit()
-            if form.student_email.data != current_user.email:
-                token = current_user.generate_confirmation_change_email(current_user.email, form.student_email.data)
-                #  Token is sent to the user's email
-                send_email(subject='Confirm your Account', recipients=[form.student_email.data],
-                           html_body='auth/confirmation_email',
-                           token=token, user=current_user, change_email=True)
-                flash('An email verification has been sent to the new email address, please click the link sent to'
-                      ' successfully change it',
-                      'info')
-            if current_user.check_password(form.student_new_password.data):
-                flash('New password cannot be the same as the old one', 'danger')
-                return redirect(url_for('auth.user_profile'))
-            if bool(form.student_old_password.data) is not False:
-                form.student_new_password.validate(form,
-                                                   extra_validators=[DataRequired(message='Please enter new password')])
-                current_user.set_password(form.student_new_password.data)
-                db.session.add(current_user)
-                db.session.commit()
-
             flash('Changes have been saved!', 'success') if not bool(form.errors) else None
-
         return render_template('user_profile.html', current_user=current_user, form=form, title='Update Profile')
+
     return redirect(url_for('index'))

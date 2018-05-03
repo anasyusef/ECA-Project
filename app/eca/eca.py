@@ -1,10 +1,9 @@
-from flask import redirect, url_for, render_template, abort
+from flask import render_template, abort
 from flask_login import login_required
 from sqlalchemy import asc, desc
 
 from app.decorators import permission_required
 from app.eca import bp
-from app.emails import send_email
 from app.forms import *
 from app.models import *
 
@@ -302,9 +301,12 @@ def quit_eca(eca_name):
     if request.args.get('waiting_list') is not None:
         WaitingList.query.filter_by(user=current_user, eca=eca).delete()
     else:
-        student_registration = Registration.query.filter_by(user=current_user, eca=eca)
-        Attendance.query.filter_by(registration=student_registration.first()).delete()
-        student_registration.delete()
+        student_registration = Registration.query.filter_by(user=current_user, eca=eca)  # The query is saved on
+        # student_registration since is going to be used later to find the attendances of the student and then it will
+        # be used to delete the registration
+        Attendance.query.filter_by(registration=student_registration.first()).delete()  # Deletes all the attendances
+        # related to the student
+        student_registration.delete()  # Deletes the student's registration
     db.session.commit()
     flash('You have quit the {} ECA successfully!'.format(eca.name), 'success')
     return redirect(url_for('eca.manage_ecas'))

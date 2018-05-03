@@ -5,7 +5,8 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField, Integ
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError, InputRequired
 from wtforms_components import TimeField
 
-from app.models import User, Eca, Registration, WaitingList
+from app.emails import send_email
+from app.models import User, Eca, Registration, WaitingList, db
 
 
 class LoginForm(FlaskForm):
@@ -197,28 +198,63 @@ class SortBy(FlaskForm):
 
 class UpdateProfile(FlaskForm):
 
-    student_username = StringField('Username', validators=[DataRequired(), Length(min=2, max=25)])
-    student_email = StringField('Email', validators=[DataRequired(), Email()])
-    student_old_password = PasswordField('Old Password')
-    student_new_password = PasswordField('New Password')
-    student_confirm_password = PasswordField('Confirm Password',
-                                             validators=[EqualTo('student_new_password',
-                                                                 message='Passwords do not match')])
+    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=25)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    old_password = PasswordField('Old Password')
+    new_password = PasswordField('New Password')
+    confirm_password = PasswordField('Confirm Password',validators=[EqualTo('student_new_password',
+                                                                            message='Passwords do not match')])
 
-    def validate_student_username(self, username):
+    def validate(self):
+        if not FlaskForm.validate(self):
+            return False
 
-        if username.data.lower() != current_user.username.lower():
-            if User.query.filter_by(username=username.data).first() is not None:
-                raise ValidationError('Username already exists. Please choose a different one')
+        if self.username.data != current_user.username:
+            current_user.username = self.username.data
+            db.session.add(current_user)
+            db.session.commit()
 
-    def validate_student_email(self, email):
+        if current_user.check_password(self.new_password.data):  # Condition to check if the password in the
+            # 'New Password' field is the same as the current password of the user
+            flash('New password cannot be the same as the old one', 'danger')
+            return False  # Returns False since it means that the validation has failed
+        if bool(self.old_password.data) is not False:  # Condition to check if the user has entered some data
+            # on the 'Old Password field', if he/she has then an extra validator is added to the 'New Password' field
+            # which is to make the field required
+            self.new_password.validate(self,
+                                       extra_validators=[DataRequired(message='Please enter new password')])
+            # If the extra validation has passed then the new password of the user is set
+            current_user.set_password(self.new_password.data)
+            # The current user is added to the session of the database
+            db.session.add(current_user)
+            # Any changes to the database are being saved
+            db.session.commit()
+        return True  # Returns True since it means that the validation has passed
 
-        if email.data != current_user.email:
-            if User.query.filter_by(email=email.data).first() is not None:
+    def validate_username(self, username):
+
+            if username.data.lower() != current_user.username.lower():  # Checks if the username entered is the same
+                # as the current username, if it is not, then the following code is executed
+                if User.query.filter_by(username=username.data.lower()).first() is not None:  # If the query returns a
+                    # value, which means that the username entered by the user already exists.
+                    raise ValidationError('Username already exists. Please choose a different one')
+
+    def validate_email(self, email):
+        if email.data.lower() != current_user.email.lower():
+            if User.query.filter_by(email=email.data.lower()).first() is not None:
                 raise ValidationError('Email already in use. Please choose a different one')
+            else:
+                token = current_user.generate_confirmation_change_email(current_user.email, self.email.data)
+                #  Token is sent to the user's email
+                send_email(subject='Confirm your Account', recipients=[self.email.data],
+                           html_body='auth/confirmation_email',
+                           token=token, user=current_user, change_email=True)
+                flash('An email verification has been sent to the new email address, please click the link sent to'
+                      ' successfully change it',
+                      'info')
 
-    def validate_student_old_password(self, old_password):
+    def validate_old_password(self, old_password):
 
-        if bool(old_password.data) is not False or bool(self.student_new_password.data) is not False:
+        if bool(old_password.data) is not False or bool(self.new_password.data) is not False:
             if not current_user.check_password(old_password.data):
                 raise ValidationError('Old password is incorrect')
