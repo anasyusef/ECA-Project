@@ -13,4 +13,4 @@ In order to create the tables into the database and add some data open the shell
 
 In the shell run the `setup_db()` function
 
-Then, quit from the shell and run the app with flask, and you should have the website running.
+Then, quit from the shell and run the app with flask (`flask run`), and you should have the website running.
