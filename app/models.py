@@ -216,6 +216,7 @@ class Datetime(db.Model):
     start_time = db.Column(db.Time)
     end_time = db.Column(db.Time)
     eca = db.relationship('Eca', back_populates='datetime')
+    __table_args__ = (db.UniqueConstraint('day', 'start_time', 'end_time', name='day_start_end_time_uc'),)
 
     def __repr__(self):
         return "<Datetime: {} -> Start: {} End: {}>".format(self.day, self.start_time, self.end_time)

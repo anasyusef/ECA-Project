@@ -4,11 +4,13 @@ from flask import request, abort
 from flask_login import current_user, login_required
 
 from app.api import bp
+from app.decorators import check_user_confirmed
 from app.models import Eca, User, Registration, Attendance
 
 
 @bp.route('/view_attendance_detail/<eca_name>/<int:user_id>')
 @login_required
+@check_user_confirmed
 def view_attendance_detail_api(eca_name, user_id):
     if current_user.role.name.lower() == 'student':
         if current_user.id != user_id:  # Checks that the student is only allowed to check his attendance
@@ -43,6 +45,7 @@ def view_attendance_detail_api(eca_name, user_id):
 
 @bp.route('/eca_info')
 @login_required
+@check_user_confirmed
 def eca_info():  # Following procedure's purpose is to deliver information to the front-end to work with AJAX
     eca = Eca.query.filter_by(name=request.args.get('eca')).first()
     # ECA is requested from the parameter sent in the URL
