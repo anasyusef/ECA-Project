@@ -1,4 +1,4 @@
-from flask import redirect, url_for, render_template
+from flask import redirect, url_for, render_template, abort
 from flask_login import login_required
 from sqlalchemy import desc, asc
 
@@ -15,7 +15,7 @@ def take_attendance(eca_name):
     eca = Eca.query.filter_by(name=eca_name).first()
 
     if eca is None:
-        return "ECA Not Found", 404
+        abort(404)
 
     if not take_attendance_status(eca):
         return redirect(url_for('eca.manage_ecas'))
@@ -28,6 +28,8 @@ def take_attendance(eca_name):
 @login_required
 def view_attendance(eca_name, user_id):
     eca = Eca.query.filter_by(name=eca_name).first()
+    if eca is None:
+        abort(404)
     form = SortBy()
     # By default the students are ordered by their first name
     ordered_registrations = Registration.query.filter_by(eca=eca).join(User).order_by(asc(User.first_name)).all()
@@ -51,23 +53,23 @@ def view_attendance(eca_name, user_id):
         user = User.query.filter_by(id=user_id).first()  # If parameters were passed then find the
         # value of the parameter and check if it is on the database,
         # it is assumed that the value is the id of the user
-        if user is not None and user in [registration.user for registration in eca.registration]:  # Checks that the
-            # user is found (not None) and if the user is registered
-            # in the eca selected. 'user' will return None when
-            # nothing is found
-            registration_user = Registration.query.filter_by(user=user, eca=eca).first()
-            if current_user.role.name.lower() == 'student' and user_id != current_user.id:
-                # If the user is a student, then he should only be able to see attendance on his ECAs, therefore
-                # if he changes the URL then an error or warning should be shown to the user indicating that he
-                # is not allowed to access to this page
-                # That is why we first check that the user is a student, then we check if the id of the student
-                # is not equal to the id on the parameter, if that is true the error below is shown
-                flash('You are not allowed to go to this page', 'danger')
-                return redirect(url_for('attendance.view_attendance', eca_name=eca_name, user_id=current_user.id))
-            return render_template('view_attendance_detail.html',
-                                   attendance_info=Attendance.query.filter_by(registration=registration_user).
-                                   order_by(desc(Attendance.date)),  ordered_registrations=ordered_registrations,
-                                   user=user, eca=eca, form=form)
+        if user is not None:  # Checks that the
+            # user is found (not None)
+            if user in [registration.user for registration in eca.registration]:  # if the user is registered in the
+                # eca selected. 'user' will return None when nothing is found
+                registration_user = Registration.query.filter_by(user=user, eca=eca).first()
+                if current_user.role.name.lower() == 'student' and user_id != current_user.id:
+                    # If the user is a student, then he should only be able to see attendance on his ECAs, therefore
+                    # if he changes the URL then an error or warning should be shown to the user indicating that he
+                    # is not allowed to access to this page
+                    # That is why we first check that the user is a student, then we check if the id of the student
+                    # is not equal to the id on the parameter, if that is true the error below is shown
+                    flash('You are not allowed to go to this page', 'danger')
+                    return redirect(url_for('attendance.view_attendance', eca_name=eca_name, user_id=current_user.id))
+                return render_template('view_attendance_detail.html',
+                                       attendance_info=Attendance.query.filter_by(registration=registration_user).
+                                       order_by(desc(Attendance.date)),  ordered_registrations=ordered_registrations,
+                                       user=user, eca=eca, form=form)
         else:
             if current_user.role.name.lower() == 'teacher':  # This is done for security purposes, so that students
                 # cannot see who is in an ECA and who is not
@@ -75,8 +77,6 @@ def view_attendance(eca_name, user_id):
                       else 'You are not allowed to go to this page', 'danger')
 
             return redirect(url_for('attendance.view_attendance', eca_name=eca_name, user_id=current_user.id))
-    if eca is None:
-        return "ECA Not Found", 404
 
     if eca.user != current_user:
         flash("You are not allowed to view attendance on this ECA", 'danger')
@@ -97,7 +97,7 @@ def record_attendance(eca_name, attended, user_id):
             return "You are not allowed to take attendance"
 
         if eca.user != current_user:
-            return "You are not allowed to do this action", 403
+            abort(403)
 
         registration_user = Registration.query.filter_by(user=User.query.get(user_id), eca=eca).first()
         if registration_user is None:
