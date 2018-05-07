@@ -2,6 +2,7 @@ from flask import redirect, url_for, render_template, get_flashed_messages
 from flask_login import login_user, logout_user, login_required
 
 from app.auth import bp
+from app.decorators import check_user_confirmed
 from app.forms import *
 from app.models import *
 from app.models import User
@@ -174,6 +175,7 @@ def resend_email():
 
 
 @bp.route('/user_profile', methods=['GET', 'POST'])
+@check_user_confirmed
 def user_profile():
     if current_user.is_authenticated:
         form = UpdateProfile()

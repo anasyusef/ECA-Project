@@ -2,6 +2,7 @@ from flask import render_template, abort, redirect, url_for
 from flask_login import login_required
 from sqlalchemy import asc, desc
 
+from app.decorators import check_user_confirmed
 from app.decorators import permission_required
 from app.eca import bp
 from app.forms import *
@@ -10,6 +11,7 @@ from app.models import *
 
 @bp.route('/add_eca', methods=['GET', 'POST'])
 @login_required
+@check_user_confirmed
 @permission_required('Teacher')
 def add_eca():
     form = AddEca()
@@ -41,6 +43,7 @@ def add_eca():
 
 @bp.route('/update/<eca_name>', methods=['GET', 'POST'])
 @login_required
+@check_user_confirmed
 @permission_required('Teacher')
 def eca_name_edit(eca_name):
 
@@ -124,6 +127,7 @@ def eca_name_edit(eca_name):
 
 @bp.route('/delete/<eca_name>')
 @login_required
+@check_user_confirmed
 @permission_required('Teacher')
 def delete_eca(eca_name):
     db.session.rollback()
@@ -153,6 +157,7 @@ def delete_eca(eca_name):
 
 @bp.route('/notification_eca', methods=['GET', 'POST'])
 @login_required
+@check_user_confirmed
 @permission_required('Teacher')
 def notification_eca():
     form = NotificationEca()
@@ -184,6 +189,7 @@ def notification_eca():
 
 @bp.route('/manage_ecas')
 @login_required
+@check_user_confirmed
 def manage_ecas():
 
     if current_user.role.name.lower() == 'teacher':
@@ -204,6 +210,7 @@ def manage_ecas():
 
 @bp.route('/delete_student/<eca_name>/')
 @login_required
+@check_user_confirmed
 @permission_required('Teacher')
 def delete_student(eca_name):
 
@@ -257,6 +264,7 @@ def delete_student(eca_name):
 
 @bp.route('/join_eca', methods=['GET', 'POST'])
 @login_required
+@check_user_confirmed
 @permission_required('Student')
 def join_eca():
     form = JoinEca()
@@ -294,6 +302,7 @@ def join_eca():
 
 @bp.route('/quit/<eca_name>/')
 @login_required
+@check_user_confirmed
 @permission_required('Student')
 def quit_eca(eca_name):
 
@@ -314,6 +323,7 @@ def quit_eca(eca_name):
 
 @bp.route('/quit/waiting_list/<eca_name>/')
 @login_required
+@check_user_confirmed
 @permission_required('Student')
 def quit_waiting_list_eca(eca_name):
     return redirect(url_for('eca.quit_eca', eca_name=eca_name, waiting_list=True))
