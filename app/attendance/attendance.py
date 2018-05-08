@@ -76,11 +76,11 @@ def view_attendance(eca_name, user_id):
                 flash('This user is not in this ECA' if current_user.role.name.lower() == 'teacher'
                       else 'You are not allowed to go to this page', 'danger')
 
-            return redirect(url_for('attendance.view_attendance', eca_name=eca_name, user_id=current_user.id))
+            return redirect(url_for('attendance.view_attendance', eca_name=eca_name))
 
     if eca.user != current_user:
         flash("You are not allowed to view attendance on this ECA", 'danger')
-        return redirect(url_for('attendance.attendance_eca'))
+        return redirect(url_for('eca.manage_ecas'))
 
     return render_template('view_attendance.html', Attendance=Attendance, Registration=Registration,
                            eca=eca, form=form, ordered_registrations=ordered_registrations)

@@ -298,6 +298,28 @@ class Attendance(db.Model):
     attended = db.Column(db.Boolean, nullable=False)
     registration_id = db.Column('registration_id', db.ForeignKey('registrations.id'), nullable=False)
     registration = db.relationship('Registration', back_populates='attendance')
+    __table_args__ = (db.UniqueConstraint('registration_id', 'date', name='registration_date_uc'),)
+
+    @staticmethod
+    def generate_fake_eca_attendance(count, eca, attended):
+        eca = Eca.query.filter_by(name=eca).first()
+        if eca is None:
+            return "ECA does not exist"
+        registrations_users_in_eca = Registration.query.filter_by(eca=eca).all()
+        for registration in registrations_users_in_eca:
+            for i in range(count):
+                date = datetime.date(2018, random.randint(1,12), random.randint(1,28))
+                db.session.add(Attendance(date=date, attended=attended, registration=registration))
+                try:
+                    db.session.commit()
+                except IntegrityError:
+                    db.session.rollback()
+
+    @staticmethod
+    def generate_fake_attendance(count, attended):
+        all_ecas_names = [eca_name.name for eca_name in Eca.query.all()]
+        for name in all_ecas_names:
+            Attendance.generate_fake_eca_attendance(count, name, attended)
 
     def __repr__(self):
         return "Attendance: {} -> {} | {}".format(self.registration.user.username, self.registration.eca.name,
