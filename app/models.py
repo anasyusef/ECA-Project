@@ -1,5 +1,6 @@
 import datetime
 import random
+import re
 
 import forgery_py
 from flask_login import UserMixin, current_user
@@ -174,34 +175,54 @@ class Eca(db.Model):
     user = db.relationship('User', back_populates='eca')
     registration = db.relationship('Registration', back_populates='eca', cascade="all,delete")
     waiting_list = db.relationship('WaitingList', back_populates='eca')
+    __table_args__ = (db.UniqueConstraint('user_id', 'datetime_id', name='name_datetime_day_uc'),)
 
     @staticmethod
     def generate_fake(count, username):
+
+        pattern_not_accepted = re.compile('[&/]+')
+
         user = User.query.filter_by(username=username).first()
         if user is None:
             return "Please enter a correct username"
         elif user.role.name.lower() == 'student':
             return "Students cannot have ECAs"
-        else:
-            for i in range(count):
-                datetime_eca = Datetime(day=forgery_py.date.day_of_week(),
-                                        start_time=datetime.time(random.randint(8, 23), random.randint(8, 59)),
-                                        end_time=datetime.time(random.randint(8, 23), random.randint(8, 59)))
+        for i in range(count):
 
-                # This is to make sure that end_time is always greater than start_time
-                while datetime_eca.end_time <= datetime_eca.start_time:
-                    datetime_eca.end_time = datetime.time(random.randint(8, 23), random.randint(8, 59))
+            eca = Eca.query.filter_by(user=user).all()
+            user_eca_days = [eca_day.datetime.day for eca_day in eca] if len(eca) > 0 else []  # Gets all the
+            #  days of the ECA that the user has or assign empty list if there are no ecas
 
-                eca = Eca(name=forgery_py.name.industry(), max_people=random.randint(1, 30),
-                          max_waiting_list=random.randint(0, 20), datetime=datetime_eca,
-                          location=forgery_py.address.street_address(), user=user,
-                          brief_description=forgery_py.lorem_ipsum.title(),
-                          essentials=forgery_py.lorem_ipsum.sentences(quantity=3))
-                db.session.add(eca)
-                try:
-                    db.session.commit()
-                except IntegrityError:
-                    db.session.rollback()
+            if len(user_eca_days) < 7:  # Means that there are still ECAs that can be created
+                random_day = forgery_py.date.day_of_week()
+                while random_day in user_eca_days:
+                    random_day = forgery_py.date.day_of_week()
+                    continue
+                else:
+                    datetime_eca = Datetime(start_time=datetime.time(random.randint(8, 23), random.randint(8, 59)),
+                                            end_time=datetime.time(random.randint(8, 23), random.randint(8, 59)))
+                    datetime_eca.day = random_day
+                    # This is to make sure that end_time is always greater than start_time
+                    while datetime_eca.end_time <= datetime_eca.start_time:
+                        datetime_eca.end_time = datetime.time(random.randint(8, 23), random.randint(8, 59))
+
+                    random_industry = forgery_py.name.industry()
+                    while bool(pattern_not_accepted.findall(random_industry)) is True:
+                        random_industry = forgery_py.name.industry()
+
+                    eca = Eca(name=random_industry, max_people=random.randint(1, 30),
+                              max_waiting_list=random.randint(0, 20), datetime=datetime_eca,
+                              location=forgery_py.address.street_address(), user=user,
+                              brief_description=forgery_py.lorem_ipsum.title(),
+                              essentials=forgery_py.lorem_ipsum.sentences(quantity=3))
+                    db.session.add(eca)
+
+                    try:
+                        db.session.commit()
+                    except IntegrityError:
+                        db.session.rollback()
+            else:
+                return "You reached your maximum amount of ECAs"
 
     def __repr__(self):
         return "<Eca {}>".format(self.name)
@@ -244,6 +265,13 @@ class Registration(db.Model):
 
             while len(eca.registration) != eca.max_people:
                     user = User.query.offset(random.randint(0, user_count - 1)).first()
+                    if user.role.name.lower() == 'teacher':  # Teachers cannot join into the ECA
+                        continue
+                    student_ecas_joined = Registration.query.filter_by(user=user).all()
+                    students_ecas_days = [eca_day.eca.datetime.day for eca_day in student_ecas_joined]\
+                        if len(student_ecas_joined) > 0 else []
+                    if eca.datetime.day in students_ecas_days:
+                        continue
                     registration_user = Registration(eca=eca, user=user)
                     db.session.add(registration_user)
                     try:
@@ -288,16 +316,29 @@ class WaitingList(db.Model):
     __table_args__ = (db.UniqueConstraint('user_id', 'eca_id', name='user_eca_uc'),)
 
     @staticmethod
-    def add_waiting_list(eca_name, count):
-        user_count = User.query.count()
-        for _ in range(count):
-            user = User.query.offset(random.randint(0, user_count - 1)).first()
-            eca = Eca.query.filter_by(name=eca_name).first()
-            db.session.add(WaitingList(user=user, eca=eca))
-            try:
-                db.session.commit()
-            except IntegrityError:
-                db.session.rollback()
+    def join_full_fake(eca_name):
+        eca = Eca.query.filter_by(name=eca_name).first()
+        if eca is None:
+            return "Please enter a correct ECA"
+        else:
+            user_count = User.query.count()
+
+            while len(eca.waiting_list) != eca.max_waiting_list:
+                user = User.query.offset(random.randint(0, user_count - 1)).first()
+                if user.role.name.lower() == 'teacher':  # Teachers cannot join into the ECA
+                    continue
+                waiting_list_user = WaitingList(eca=eca, user=user)
+                db.session.add(waiting_list_user)
+                try:
+                    db.session.commit()
+                except IntegrityError:
+                    db.session.rollback()
+
+    @staticmethod
+    def join_all_fake():
+        all_ecas_names = [eca_name.name for eca_name in Eca.query.all()]
+        for name in all_ecas_names:
+            WaitingList.join_full_fake(name)
 
 
 @login.user_loader
@@ -309,7 +350,8 @@ def setup_db():
     db.create_all()
     Role.insert_roles()
     User.add_main_users()
-    User.generate_fake(10, 'Teacher')
-    User.generate_fake(100, 'Student')
-    Eca.generate_fake(2, 'Anas.Yousef')
-    Eca.generate_fake(2, 'Teacher.Test')
+    User.generate_fake(int(input('Teacher\'s account  to create\n> ')), 'Teacher')
+    User.generate_fake(int(input('Student\'s account  to create\n> ')), 'Student')
+    all_teachers = User.query.filter_by(role=Role.query.filter_by(name='Teacher').first()).all()
+    for teacher in all_teachers:
+        Eca.generate_fake(4, teacher.username)

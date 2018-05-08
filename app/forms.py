@@ -1,3 +1,5 @@
+import re
+
 from flask import flash, request
 from flask_login import current_user
 from flask_wtf import FlaskForm
@@ -78,9 +80,10 @@ class AddEca(FlaskForm):
         if query is not None:
             raise ValidationError('ECA already exists. Please create a different one.')
 
-        for character in characters_not_valid:
-            if character in name.data:
-                raise ValidationError("The following characters are not valid: {} ".format(characters_not_valid))
+        pattern_not_accepted = re.compile('[&/]+')
+        if bool(pattern_not_accepted.findall(name.data)) is True:
+            raise ValidationError("The following characters are not valid: {} ".
+                                  format(characters_not_valid))
 
     def validate_end_time_eca(self, end_time):
         if end_time.data <= self.start_time_eca.data:
@@ -146,16 +149,17 @@ class EditEca(AddEca, FlaskForm):
     status_eca = SelectField('Status', choices=[('active', 'Active'), ('inactive', 'Inactive')])
 
     def validate_eca_name(self, name):
+        characters_not_valid = ('/', '&')
         eca_name = request.path.split('/')[-1]
         if name.data.lower() != eca_name.lower():
             query = Eca.query.filter_by(name=name.data).first()
             if query is not None:
                 raise ValidationError('ECA already exists. Please choose a different one.')
 
-        characters_not_valid = ('/', '&')
-        for character in characters_not_valid:
-            if character in name.data:
-                raise ValidationError("The following characters are not valid: {} ".format(characters_not_valid))
+        pattern_not_accepted = re.compile('[&/]+')
+        if bool(pattern_not_accepted.findall(name.data)) is True:
+            raise ValidationError("The following characters are not valid: {} ".
+                                  format(characters_not_valid))
 
     def validate_max_people(self, max_people):
         eca = Eca.query.filter_by(name=request.path.split('/')[-1]).first()

@@ -241,14 +241,15 @@ def delete_student(eca_name):
                 new_user_registration = Registration(eca=eca_user_related,
                                                      user=front_user_waiting_list.first().user)
 
+                WaitingList.query.filter_by(eca=eca_user_related,
+                                            user=front_user_waiting_list.first().user).delete()
+
                 send_email(subject='Removed from waiting list - {} ECA'.format(eca_user_related.name),
                            html_body='email_removed_from_waiting_list',
                            recipients=[front_user_waiting_list.first().user.email],
                            user=front_user_waiting_list.first().user, eca_name=eca_name,
                            transferred_to_active_list=True)
 
-                WaitingList.query.filter_by(eca=eca_user_related,
-                                            user=front_user_waiting_list.first().user).delete()
                 db.session.add(new_user_registration)
         elif request.args.get('action') == 'remove_wl':
             user_waiting_list = WaitingList.query.filter_by(user=user_to_delete, eca=eca_user_related)
@@ -316,6 +317,18 @@ def quit_eca(eca_name):
         Attendance.query.filter_by(registration=student_registration.first()).delete()  # Deletes all the attendances
         # related to the student
         student_registration.delete()  # Deletes the student's registration
+
+        # Code to remove student from waiting list and add it to the registration list
+        front_user_waiting_list = WaitingList.query.filter_by(eca=eca)
+        if front_user_waiting_list.first() is not None:
+            new_user_registration = Registration(eca=eca,
+                                                 user=front_user_waiting_list.first().user)
+
+            WaitingList.query.filter_by(eca=eca,
+                                        user=front_user_waiting_list.first().user).delete()
+
+            db.session.add(new_user_registration)
+
     db.session.commit()
     flash('You have quit the {} ECA successfully!'.format(eca.name), 'success')
     return redirect(url_for('eca.manage_ecas'))
