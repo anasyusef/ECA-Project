@@ -67,7 +67,6 @@ def get_next_eca(ecas, today_eca):
         eca_days = [eca_day.datetime.day.title() for eca_day in ecas]
     else:
         eca_days = [registration_eca_day.eca.datetime.day.title() for registration_eca_day in ecas]
-        print(eca_days)
     eca_days_nums = [day_num_names[i] for i in eca_days]
     eca_days_nums.sort()
     # Checks if there is an ECA today and if the time right now is less than the start time of the eca
@@ -81,14 +80,11 @@ def get_next_eca(ecas, today_eca):
             next_eca = Eca.query.filter_by(user=current_user, is_active=True).join(Datetime).\
                 filter_by(day=next_eca_day_name).first()
         else:
-            print(next_eca_day_name)
             next_eca = Registration.query.filter_by(user=current_user).join(Eca).filter_by(is_active=True).\
                 join(Datetime).filter_by(day=next_eca_day_name).first()
         try:
-            print(next_eca.eca)
             return next_eca.eca
         except AttributeError:
-            print(next_eca)
             return next_eca
 
 

@@ -228,11 +228,12 @@ class UpdateProfile(FlaskForm):
             self.new_password.validate(self,
                                        extra_validators=[DataRequired(message='Please enter new password')])
             # If the extra validation has passed then the new password of the user is set
-            current_user.set_password(self.new_password.data)
-            # The current user is added to the session of the database
-            db.session.add(current_user)
-            # Any changes to the database are being saved
-            db.session.commit()
+            if self.validate():
+                current_user.set_password(self.new_password.data)
+                # The current user is added to the session of the database
+                db.session.add(current_user)
+                # Any changes to the database are being saved
+                db.session.commit()
         return True  # Returns True since it means that the validation has passed
 
     def validate_username(self, username):
