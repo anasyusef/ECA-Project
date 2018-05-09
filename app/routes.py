@@ -89,6 +89,16 @@ def get_next_eca(ecas, today_eca):
 
 
 def get_next_number(arr, target):
+    """
+    Function to get the next number of the list, for example if we have a list that contains the following data:
+    [1,3,5]
+    And the target parameter is 2, then the function will return 3. Also, if we have a list that contains the following
+    data: [1,3] and the target parameter is 4 then the function will return the first item of the list
+
+    :param arr:
+    :param target:
+    :return:
+    """
     count = 0
     while True:
         # If the last item from the list is bigger than the number then it means that there are more items on the right
