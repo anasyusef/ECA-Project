@@ -22,13 +22,13 @@ def view_attendance_detail_api(eca_name, user_id):
         if eca.user != current_user:
             abort(403)
     if eca_name.lower() == 'overall':
-        registration_user = Registration.query.filter_by(user=user).first()
+        registration_user = Registration.query.filter_by(user=user, in_waiting_list=False).first()
         user_attendance_true = len(Attendance.query.filter_by(registration=registration_user, attended=True).all())
         user_attendance_false = len(Attendance.query.filter_by(registration=registration_user, attended=False).all())
         user_attendance_total = len(Attendance.query.filter_by(registration=registration_user).all())
     else:
         if eca is not None:
-            registration_user = Registration.query.filter_by(user=user, eca=eca).first()
+            registration_user = Registration.query.filter_by(user=user, eca=eca, in_waiting_list=False).first()
             user_attendance_true = len(Attendance.query.filter_by(registration=registration_user, attended=True).all())
             user_attendance_false = len(Attendance.query.filter_by(registration=registration_user, attended=False).all())
             user_attendance_total = len(Attendance.query.filter_by(registration=registration_user).all())
@@ -61,8 +61,8 @@ def eca_info():  # Following procedure's purpose is to deliver information to th
         brief_description = eca.brief_description
         essentials = eca.essentials
         email_address = eca.user.email
-        students_enrolled = len(eca.registration)
-        students_in_waiting_list = len(eca.waiting_list)
+        students_enrolled = len(Registration.query.filter_by(eca=eca, in_waiting_list=False).all())
+        students_in_waiting_list = len(Registration.query.filter_by(eca=eca, in_waiting_list=True).all())
         status = eca.is_active
         return json.dumps({'start_time': start_time, 'end_time': end_time,
                            'day': day.title(), 'organiser': organiser, 'location': location,

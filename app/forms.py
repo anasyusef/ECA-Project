@@ -8,7 +8,7 @@ from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationE
 from wtforms_components import TimeField
 
 from app.emails import send_email
-from app.models import User, Eca, Registration, WaitingList, db
+from app.models import User, Eca, Registration, db
 
 
 class LoginForm(FlaskForm):
@@ -130,7 +130,7 @@ class JoinEca(FlaskForm):
                   ' will need to wait until some student drops out or is removed from the ECA', 'info')
             raise ValidationError()
 
-        elif len(WaitingList.query.filter_by(eca=eca).all()) == eca.max_waiting_list and \
+        elif len(Registration.query.filter_by(eca=eca, in_waiting_list=True).all()) == eca.max_waiting_list and \
                 len(all_registrations_in_eca) == eca.max_people:
             flash('This ECA has reached its waiting list capacity, if you still want to join into this'
                   ' ECA you will need to wait until some student drops out or is removed from the ECA',
@@ -169,7 +169,7 @@ class EditEca(AddEca, FlaskForm):
 
     def validate_max_waiting_list(self, max_waiting_list):
         eca = Eca.query.filter_by(name=request.path.split('/')[-1]).first()
-        if max_waiting_list.data < len(WaitingList.query.filter_by(eca=eca).all()):
+        if max_waiting_list.data < len(Registration.query.filter_by(eca=eca, in_waiting_list=True).all()):
             raise ValidationError('You need to remove students already joined in the waiting list in order '
                                   'to decrease the capacity of students in the waiting list allowed')
 

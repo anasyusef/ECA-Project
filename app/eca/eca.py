@@ -55,30 +55,30 @@ def eca_name_edit(eca_name):
     form_sort_by = SortBy()
     if eca.user != current_user:
         flash('You are not allowed to edit this ECA', 'danger')
-        return redirect(url_for('eca.eca_name_edit'))
+        return redirect(url_for('eca.manage_ecas'))
     # Time is converted to string in order to avoid errors while rendering the template and passing it as a value
     # to a field
     start_time_eca = eca.datetime.start_time.strftime('%H:%M')
     end_time_eca = eca.datetime.end_time.strftime('%H:%M')
 
     # By default the students are ordered by their first name
-    ordered_registrations = Registration.query.filter_by(eca=eca).join(User).order_by(asc(User.first_name)).all()
+    ordered_registrations = Registration.query.filter_by(eca=eca, in_waiting_list=False).join(User).order_by(asc(User.first_name)).all()
     # If the user has decided to change the order, then the form.validate_on_submit() function will be triggered
     # depending on the choice of the user the students will be sorted accordingly
 
     if request.form.get('sort_by') is not None:
         if form_sort_by.validate_on_submit():
             if form_sort_by.sort_by.data.lower() == 'first_name':
-                ordered_registrations = Registration.query.filter_by(eca=eca).join(User).\
+                ordered_registrations = Registration.query.filter_by(eca=eca, in_waiting_list=False).join(User).\
                     order_by(asc(User.first_name)).all()
             elif form_sort_by.sort_by.data.lower() == 'last_name':
-                ordered_registrations = Registration.query.filter_by(eca=eca).join(User). \
+                ordered_registrations = Registration.query.filter_by(eca=eca, in_waiting_list=False).join(User). \
                     order_by(asc(User.last_name)).all()
             elif form_sort_by.sort_by.data.lower() == 'highest_attendance':
-                ordered_registrations = Registration.query.filter_by(eca=eca).join(Attendance)\
+                ordered_registrations = Registration.query.filter_by(eca=eca, in_waiting_list=False).join(Attendance)\
                     .order_by(desc(Attendance.attended))
             elif form_sort_by.sort_by.data.lower() == 'lowest_attendance':
-                ordered_registrations = Registration.query.filter_by(eca=eca).join(Attendance) \
+                ordered_registrations = Registration.query.filter_by(eca=eca, in_waiting_list=False).join(Attendance) \
                     .order_by(asc(Attendance.attended))
 
     else:
@@ -122,7 +122,7 @@ def eca_name_edit(eca_name):
     return render_template('edit_eca.html', form=form, eca=eca, start_time_eca=start_time_eca,
                            end_time_eca=end_time_eca, form_sort_by=form_sort_by,
                            ordered_registrations=ordered_registrations, title='{} ECA - Edit'.format(eca.name),
-                           Attendance=Attendance)
+                           Attendance=Attendance, Registration=Registration)
 
 
 @bp.route('/delete/<eca_name>')
@@ -199,7 +199,6 @@ def manage_ecas():
             flash('You have not created any ECA yet.', 'info')
     else:
         ecas = Eca.query.filter_by().join(Registration).filter_by(user=current_user).all()
-        ecas += Eca.query.filter_by().join(WaitingList).filter_by(user=current_user).all()
         title = 'Joined ECAs'
         if len(ecas) == 0:
             flash('You have not joined into any ECAs yet.', 'info')
@@ -216,6 +215,9 @@ def delete_student(eca_name):
 
     user_to_delete = User.query.filter_by(id=request.args.get('id')).first()
     eca_user_related = Eca.query.filter_by(name=eca_name).first()
+
+    if user_to_delete is None or eca_user_related is None:
+        abort(404)
 
     if eca_user_related.user != current_user:  # This is to only allow the teacher that created the ECA to remove
         # students from his ECA, if other teacher somehow access this link it will not be allowed to remove any
@@ -236,24 +238,20 @@ def delete_student(eca_name):
             # Finally, deletes the user
             user_registration.delete()
             # Code to remove student from waiting list and add it to the registration list
-            front_user_waiting_list = WaitingList.query.filter_by(eca=eca_user_related)
-            if front_user_waiting_list.first() is not None:
-                new_user_registration = Registration(eca=eca_user_related,
-                                                     user=front_user_waiting_list.first().user)
+            front_user_waiting_list = Registration.query.filter_by(eca=eca_user_related, in_waiting_list=True).first()
+            if front_user_waiting_list is not None:
+                front_user_waiting_list.in_waiting_list = False
 
-                WaitingList.query.filter_by(eca=eca_user_related,
-                                            user=front_user_waiting_list.first().user).delete()
-
-                send_email(subject='Removed from waiting list - {} ECA'.format(eca_user_related.name),
+                send_email(subject='Removed from waiting list and transferred to active list'
+                                   ' - {} ECA'.format(eca_user_related.name),
                            html_body='email_removed_from_waiting_list',
-                           recipients=[front_user_waiting_list.first().user.email],
-                           user=front_user_waiting_list.first().user, eca_name=eca_name,
+                           recipients=[front_user_waiting_list.user.email],
+                           user=front_user_waiting_list.user, eca_name=eca_name,
                            transferred_to_active_list=True)
 
-                db.session.add(new_user_registration)
+                db.session.add(front_user_waiting_list)
         elif request.args.get('action') == 'remove_wl':
-            user_waiting_list = WaitingList.query.filter_by(user=user_to_delete, eca=eca_user_related)
-            user_waiting_list.delete()
+            Registration.query.filter_by(user=user_to_delete, eca=eca_user_related, in_waiting_list=True).delete()
             send_email(subject='Removed from waiting list - {} ECA'.format(eca_user_related.name),
                        html_body='email_removed_from_waiting_list', recipients=[user_to_delete.email],
                        user=user_to_delete, eca_name=eca_name, transferred_to_active_list=False,
@@ -276,7 +274,7 @@ def join_eca():
         eca = Eca.query.filter_by(name=form.eca_name.data).first()
 
         if len(eca.registration) == eca.max_people:
-            db.session.add(WaitingList(user=current_user, eca=eca))
+            db.session.add(Registration(user=current_user, eca=eca, in_waiting_list=True))
             try:
                 db.session.commit()
                 flash('This ECA has reached its maximum capacity of students, you will be put on the waiting list',
@@ -308,35 +306,18 @@ def join_eca():
 def quit_eca(eca_name):
 
     eca = Eca.query.filter_by(name=eca_name).first()
-    if request.args.get('waiting_list') is not None:
-        WaitingList.query.filter_by(user=current_user, eca=eca).delete()
-    else:
-        student_registration = Registration.query.filter_by(user=current_user, eca=eca)  # The query is saved on
-        # student_registration since is going to be used later to find the attendances of the student and then it will
-        # be used to delete the registration
-        Attendance.query.filter_by(registration=student_registration.first()).delete()  # Deletes all the attendances
-        # related to the student
-        student_registration.delete()  # Deletes the student's registration
+    student_registration = Registration.query.filter_by(user=current_user, eca=eca)  # The query is saved on
+    # student_registration since is going to be used later to find the attendances of the student and then it will
+    # be used to delete the registration
+    student_registration.delete()  # Deletes the student's registration
 
-        # Code to remove student from waiting list and add it to the registration list
-        front_user_waiting_list = WaitingList.query.filter_by(eca=eca)
-        if front_user_waiting_list.first() is not None:
-            new_user_registration = Registration(eca=eca,
-                                                 user=front_user_waiting_list.first().user)
+    # Code to remove student from waiting list and add it to the registration list
+    front_user_waiting_list = Registration.query.filter_by(eca=eca, in_waiting_list=True).first()
+    if front_user_waiting_list is not None:
+        front_user_waiting_list.in_waiting_list = False
 
-            WaitingList.query.filter_by(eca=eca,
-                                        user=front_user_waiting_list.first().user).delete()
-
-            db.session.add(new_user_registration)
+        db.session.add(front_user_waiting_list)
 
     db.session.commit()
     flash('You have quit the {} ECA successfully!'.format(eca.name), 'success')
     return redirect(url_for('eca.manage_ecas'))
-
-
-@bp.route('/quit/waiting_list/<eca_name>/')
-@login_required
-@check_user_confirmed
-@permission_required('Student')
-def quit_waiting_list_eca(eca_name):
-    return redirect(url_for('eca.quit_eca', eca_name=eca_name, waiting_list=True))

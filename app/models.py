@@ -26,7 +26,6 @@ class User(UserMixin, db.Model):
     eca = db.relationship('Eca', back_populates='user')
     role = db.relationship('Role', back_populates='user')
     registration = db.relationship('Registration', back_populates='user')
-    waiting_list = db.relationship('WaitingList', back_populates='user')
 
     def __repr__(self):
         return "<User {}>".format(self.username)
@@ -174,7 +173,6 @@ class Eca(db.Model):
     datetime = db.relationship('Datetime', back_populates='eca')
     user = db.relationship('User', back_populates='eca')
     registration = db.relationship('Registration', back_populates='eca', cascade="all,delete")
-    waiting_list = db.relationship('WaitingList', back_populates='eca')
     __table_args__ = (db.UniqueConstraint('user_id', 'datetime_id', name='name_datetime_day_uc'),)
 
     @staticmethod
@@ -210,8 +208,8 @@ class Eca(db.Model):
                     while bool(pattern_not_accepted.findall(random_industry)) is True:
                         random_industry = forgery_py.name.industry()
 
-                    eca = Eca(name=random_industry, max_people=random.randint(1, 30),
-                              max_waiting_list=random.randint(0, 20), datetime=datetime_eca,
+                    eca = Eca(name=random_industry, max_people=random.randint(1, 13),
+                              max_waiting_list=random.randint(0, 5), datetime=datetime_eca,
                               location=forgery_py.address.street_address(), user=user,
                               brief_description=forgery_py.lorem_ipsum.title(),
                               essentials=forgery_py.lorem_ipsum.sentences(quantity=3))
@@ -250,20 +248,21 @@ class Registration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     eca_id = db.Column('eca_id', db.ForeignKey('ecas.id'), nullable=False)
     user_id = db.Column('user_id', db.ForeignKey('users.id'), nullable=False)
+    in_waiting_list = db.Column(db.Boolean, default=False)
     eca = db.relationship('Eca', back_populates='registration', cascade="all,delete")
     user = db.relationship('User', back_populates='registration')
     attendance = db.relationship('Attendance', back_populates='registration')
     __table_args__ = (db.UniqueConstraint('user_id', 'eca_id', name='user_eca_uc'),)
 
     @staticmethod
-    def join_full_fake(eca_name):
+    def join_full_fake(eca_name, in_waiting_list=False):
         eca = Eca.query.filter_by(name=eca_name).first()
         if eca is None:
             return "Please enter a correct ECA"
         else:
             user_count = User.query.count()
-
-            while len(eca.registration) != eca.max_people:
+            max_people = eca.max_people if in_waiting_list is False else eca.max_waiting_list
+            while len(Registration.query.filter_by(eca=eca, in_waiting_list=in_waiting_list).all()) != max_people:
                     user = User.query.offset(random.randint(0, user_count - 1)).first()
                     if user.role.name.lower() == 'teacher':  # Teachers cannot join into the ECA
                         continue
@@ -272,7 +271,7 @@ class Registration(db.Model):
                         if len(student_ecas_joined) > 0 else []
                     if eca.datetime.day in students_ecas_days:
                         continue
-                    registration_user = Registration(eca=eca, user=user)
+                    registration_user = Registration(eca=eca, user=user, in_waiting_list=in_waiting_list)
                     db.session.add(registration_user)
                     try:
                         db.session.commit()
@@ -280,10 +279,10 @@ class Registration(db.Model):
                         db.session.rollback()
 
     @staticmethod
-    def join_all_fake():
+    def join_all_fake(in_waiting_list=False):
         all_ecas_names = [eca_name.name for eca_name in Eca.query.all()]
         for name in all_ecas_names:
-            Registration.join_full_fake(name)
+            Registration.join_full_fake(name, in_waiting_list)
 
     def __repr__(self):
         return "<Registration: {} -> {}>".format(self.user.username, self.eca.name)
@@ -297,7 +296,7 @@ class Attendance(db.Model):
     date = db.Column(db.Date, nullable=False)
     attended = db.Column(db.Boolean, nullable=False)
     registration_id = db.Column('registration_id', db.ForeignKey('registrations.id'), nullable=False)
-    registration = db.relationship('Registration', back_populates='attendance')
+    registration = db.relationship('Registration', back_populates='attendance', cascade="all,delete")
     __table_args__ = (db.UniqueConstraint('registration_id', 'date', name='registration_date_uc'),)
 
     @staticmethod
@@ -324,43 +323,6 @@ class Attendance(db.Model):
     def __repr__(self):
         return "Attendance: {} -> {} | {}".format(self.registration.user.username, self.registration.eca.name,
                                                   self.date)
-
-
-class WaitingList(db.Model):
-
-    __tablename__ = 'waiting_lists'
-
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column('user_id', db.ForeignKey('users.id'), nullable=False)
-    eca_id = db.Column('eca_id', db.ForeignKey('ecas.id'), nullable=False)
-    eca = db.relationship('Eca', back_populates='waiting_list')
-    user = db.relationship('User', back_populates='waiting_list')
-    __table_args__ = (db.UniqueConstraint('user_id', 'eca_id', name='user_eca_uc'),)
-
-    @staticmethod
-    def join_full_fake(eca_name):
-        eca = Eca.query.filter_by(name=eca_name).first()
-        if eca is None:
-            return "Please enter a correct ECA"
-        else:
-            user_count = User.query.count()
-
-            while len(eca.waiting_list) != eca.max_waiting_list:
-                user = User.query.offset(random.randint(0, user_count - 1)).first()
-                if user.role.name.lower() == 'teacher':  # Teachers cannot join into the ECA
-                    continue
-                waiting_list_user = WaitingList(eca=eca, user=user)
-                db.session.add(waiting_list_user)
-                try:
-                    db.session.commit()
-                except IntegrityError:
-                    db.session.rollback()
-
-    @staticmethod
-    def join_all_fake():
-        all_ecas_names = [eca_name.name for eca_name in Eca.query.all()]
-        for name in all_ecas_names:
-            WaitingList.join_full_fake(name)
 
 
 @login.user_loader

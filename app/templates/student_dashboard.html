@@ -54,7 +54,7 @@
                                                 {%- for eca in ecas_joined -%}
                                                 <tr>
                                                     <td>{{ eca.eca.name }} {%- if not eca.eca.is_active %} (Inactive) {% endif %}
-                                                        {%- if not Registration.query.filter_by(eca=eca.eca, user=current_user).first() -%} (In Waiting List) {%- endif -%}</td>
+                                                        {%- if Registration.query.filter_by(eca=eca.eca, user=current_user, in_waiting_list=True).first() %} (In Waiting List) {%- endif -%}</td>
                                                     <td>{{ eca.eca.datetime.day.title() }}</td>
                                                     <td>{{ eca.eca.datetime.start_time }}</td>
                                                     <td>{{ eca.eca.datetime.end_time }}</td>
@@ -85,7 +85,7 @@
                                         <tbody>
 
                                             <tr>
-                                                <td>{{ next_eca.name }}</td>
+                                                <td>{{ next_eca.name }} {%- if Registration.query.filter_by(eca=next_eca, user=current_user, in_waiting_list=True).first() %} (In Waiting List) {%- endif -%}</td></td>
                                                 <td>{{ next_eca.datetime.day.title() }}</td>
                                                 <td>{{ next_eca.datetime.start_time }}</td>
                                             </tr>

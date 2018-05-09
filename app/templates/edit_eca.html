@@ -161,7 +161,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                            {%- for waiting_list in eca.waiting_list -%}
+                            {%- for waiting_list in Registration.query.filter_by(eca=eca, in_waiting_list=True).all() -%}
                                 <tr>
                                     <td><a href="{{ url_for('attendance.view_attendance', eca_name=eca.name, user_id=waiting_list.user.id) }}">{{ waiting_list.user.first_name }} {{ waiting_list.user.last_name }}</a></td>
                                     <td class="td-actions text-right">

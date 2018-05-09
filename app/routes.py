@@ -6,7 +6,7 @@ from flask_login import current_user
 
 from app import app
 from app.decorators import check_user_confirmed
-from app.models import Eca, Registration, WaitingList, Datetime
+from app.models import Eca, Registration, Datetime
 
 
 @app.errorhandler(404)
@@ -40,7 +40,6 @@ def index():
                                    next_eca=get_next_eca(ecas_by_user, today_eca))
         elif current_user.role.name.lower() == 'student':
             ecas_joined = Registration.query.filter_by(user=current_user).all()
-            ecas_joined += WaitingList.query.filter_by(user=current_user).all()
             today_eca = Registration.query.filter_by(user=current_user).join(Eca).filter_by(is_active=True).\
                 join(Datetime).filter_by(day=today_weekday_name).first()
             if today_eca is not None:
@@ -68,6 +67,7 @@ def get_next_eca(ecas, today_eca):
         eca_days = [eca_day.datetime.day.title() for eca_day in ecas]
     else:
         eca_days = [registration_eca_day.eca.datetime.day.title() for registration_eca_day in ecas]
+        print(eca_days)
     eca_days_nums = [day_num_names[i] for i in eca_days]
     eca_days_nums.sort()
     # Checks if there is an ECA today and if the time right now is less than the start time of the eca
@@ -75,36 +75,36 @@ def get_next_eca(ecas, today_eca):
     if today_eca is not None and datetime.datetime.today().time() < today_eca.datetime.start_time:
         return today_eca
     else:
-        count = 0
-        count_exception = 0  # This is to increase the count when it enters into the except clause
-        while True:
-            try:
-                next_eca_num_day = eca_days_nums[eca_days_nums.index(datetime.datetime.today().weekday()) + 1 + count]
-            # IndexError has been put in case the index that has been set in next_eca_num_day is not found
-            # ValueError has been put in case there is no ECA today datetime.datetime.today().weekday(), so when
-            # trying to find the index of today is not gonna be found and ValueError is going to be triggered
-            except (IndexError, ValueError):
-                if count_exception > len(eca_days_nums) - 1:  # This is to ensure that the IndexError does not get
-                    # triggered again, so instead of writing another try, except clause, I just say if the condition
-                    # above is met, then there will be no ECAs available, therefore the value of next_eca is None
-                    next_eca = None
-                    break
-                else:
-                    # If the except clause gets triggered, then it will go back to index 0 and go on from there,
-                    # for example, if it gets triggered again, then it will go to index 1 and so on.
-                    next_eca_num_day = eca_days_nums[0 + count_exception]
-                    count_exception += 1
+        next_eca_day_name = day_names[get_next_number(eca_days_nums, datetime.datetime.today().weekday())]
 
-            next_eca_day_name = day_names[next_eca_num_day]
-            if isinstance(ecas[0], Eca):
-                next_eca = Eca.query.filter_by(user=current_user, is_active=True).join(Datetime).\
-                    filter_by(day=next_eca_day_name).first()
-            else:
-                next_eca = Registration.query.filter_by(user=current_user).join(Eca).filter_by(is_active=True).\
-                    join(Datetime).filter_by(day=next_eca_day_name).first()
-            if next_eca is None:
-                count += 1
+        if isinstance(ecas[0], Eca):
+            next_eca = Eca.query.filter_by(user=current_user, is_active=True).join(Datetime).\
+                filter_by(day=next_eca_day_name).first()
+        else:
+            print(next_eca_day_name)
+            next_eca = Registration.query.filter_by(user=current_user).join(Eca).filter_by(is_active=True).\
+                join(Datetime).filter_by(day=next_eca_day_name).first()
+        try:
+            print(next_eca.eca)
+            return next_eca.eca
+        except AttributeError:
+            print(next_eca)
+            return next_eca
+
+
+def get_next_number(arr, target):
+    count = 0
+    while True:
+        # If the last item from the list is bigger than the number then it means that there are more items on the right
+        # therefore count is increased
+        if arr[-1] > target:
             try:
-                return next_eca.eca
-            except AttributeError:
-                return next_eca
+                count += 1
+                return arr[arr.index(target + count)]
+            except ValueError:
+                continue
+        # If the last item from the list is smaller or equal
+        # than the number then it means that the next eca would be in the
+        # first item of the list
+        elif arr[-1] <= target:
+            return arr[0]

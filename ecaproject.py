@@ -7,4 +7,4 @@ def make_shell_context():
     :return:
     """
     return {'db': db, 'User': User, 'Role': Role, 'Eca': Eca, 'Datetime': Datetime, 'Registration': Registration,
-            'WaitingList': WaitingList, 'Attendance': Attendance, 'setup_db': setup_db}
+            'Attendance': Attendance, 'setup_db': setup_db}
