@@ -8,7 +8,7 @@ from app.models import *
 from app.models import User
 
 
-@bp.route('/login', methods=['GET', 'POST'])  # Test plan complete
+@bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     #  In case the user went to /login by mistake or for some other reason, this piece of code is to ensure that
@@ -34,7 +34,7 @@ def logout():
     return redirect(url_for('index'))
 
 
-@bp.route('/register', methods=['GET', 'POST'])  # Test plan complete
+@bp.route('/register', methods=['GET', 'POST'])
 def register():
     form = SignUpForm()
     if form.validate_on_submit():
@@ -67,7 +67,7 @@ def register():
                            messages=get_flashed_messages(with_categories=True))
 
 
-@bp.route('/reset_password', methods=['GET', 'POST'])  # Test plan complete
+@bp.route('/reset_password', methods=['GET', 'POST'])
 def reset_password():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -83,7 +83,7 @@ def reset_password():
     return render_template('forgot_credentials.html', form=form, title='Forgot Password')
 
 
-@bp.route('/forgot_username', methods=['GET', 'POST'])  # Test plan complete
+@bp.route('/forgot_username', methods=['GET', 'POST'])
 def forgot_username():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -99,7 +99,7 @@ def forgot_username():
 
 
 @bp.route('/reset_password_request/<token>', methods=['GET', 'POST'])
-def reset_password_request(token):  # Test plan complete
+def reset_password_request(token):
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     q = User.confirm_password_token(token)  # id of the user requesting to change the password is gotten from the
@@ -120,21 +120,18 @@ def reset_password_request(token):  # Test plan complete
     return render_template('reset_password_request.html', form=form, title='Change Password')
 
 
-@bp.route('/confirm/<token>')  # Test plan complete
+@bp.route('/confirm/<token>')
 @login_required
 def confirm(token):
-    if current_user.confirm(token):
+    if current_user.confirmed:
+        flash('Your account is already confirmed', 'info')
+        redirect(url_for('index'))
+    elif current_user.confirm(token):
         flash('Your account is now confirmed! Thank you', 'success')
         db.session.commit()  # db.session.add() is already done on current_user.confirm(token)
         return redirect(url_for('index'))
-    elif current_user.is_authenticated and not current_user.confirm(token):
-        logout_user()
-        flash('Please login with the appropriate user in order to confirm your account')
-    elif current_user.confirmed:
-        flash('Your account is already confirmed', 'danger')
-        redirect(url_for('index'))
     else:
-        flash('Link is invalid or expired', 'danger')
+        flash('Link is invalid or expired', 'warning')
 
     return redirect(url_for('index'))
 
@@ -155,7 +152,7 @@ def change_email(token):
         return redirect(url_for('auth.user_profile'))
 
 
-@bp.route('/unconfirmed')  # Test plan complete
+@bp.route('/unconfirmed')
 @login_required
 def unconfirmed():
     if current_user.confirmed:

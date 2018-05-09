@@ -104,9 +104,8 @@ class User(UserMixin, db.Model):
     def add_main_users():
 
         user_info = [('Anas Yousef', 'anasyusef@hotmail.com', 'Teacher'),
-                     ('Student Test', 'termosad@hotmail.com', 'Student'),
-                     ('Teacher Test', 'anasfreelancer2807@gmail.com', 'Teacher'),
-                     ('Student1 Test', 'samenza2807@gmail.com', 'Student')]
+                     ('Student Test', 'studenttest70@gmail.com', 'Student'),
+                     ('Teacher Test', 'anasfreelancer2807@gmail.com', 'Teacher'),]
 
         for user_full_name, email, role in user_info:
             user_first_name = user_full_name.split(' ')[0]
@@ -172,7 +171,7 @@ class Eca(db.Model):
     datetime_id = db.Column('datetime_id', db.ForeignKey('datetimes.id'), nullable=False)
     datetime = db.relationship('Datetime', back_populates='eca')
     user = db.relationship('User', back_populates='eca')
-    registration = db.relationship('Registration', back_populates='eca', cascade="all,delete")
+    registration = db.relationship('Registration', back_populates='eca', passive_deletes=True)
     __table_args__ = (db.UniqueConstraint('user_id', 'datetime_id', name='name_datetime_day_uc'),)
 
     @staticmethod
@@ -246,12 +245,12 @@ class Registration(db.Model):
     __tablename__ = 'registrations'
 
     id = db.Column(db.Integer, primary_key=True)
-    eca_id = db.Column('eca_id', db.ForeignKey('ecas.id'), nullable=False)
+    eca_id = db.Column('eca_id', db.ForeignKey('ecas.id', ondelete='CASCADE'), nullable=False)
     user_id = db.Column('user_id', db.ForeignKey('users.id'), nullable=False)
     in_waiting_list = db.Column(db.Boolean, default=False)
-    eca = db.relationship('Eca', back_populates='registration', cascade="all,delete")
+    eca = db.relationship('Eca', back_populates='registration')
     user = db.relationship('User', back_populates='registration')
-    attendance = db.relationship('Attendance', back_populates='registration')
+    attendance = db.relationship('Attendance', back_populates='registration', passive_deletes=True)
     __table_args__ = (db.UniqueConstraint('user_id', 'eca_id', name='user_eca_uc'),)
 
     @staticmethod
@@ -295,30 +294,36 @@ class Attendance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date, nullable=False)
     attended = db.Column(db.Boolean, nullable=False)
-    registration_id = db.Column('registration_id', db.ForeignKey('registrations.id'), nullable=False)
-    registration = db.relationship('Registration', back_populates='attendance', cascade="all,delete")
+    registration_id = db.Column('registration_id', db.ForeignKey('registrations.id', ondelete='CASCADE'),
+                                nullable=False)
+    registration = db.relationship('Registration', back_populates='attendance')
     __table_args__ = (db.UniqueConstraint('registration_id', 'date', name='registration_date_uc'),)
 
     @staticmethod
-    def generate_fake_eca_attendance(count, eca, attended):
+    def generate_fake_eca_attendance(count, eca, attended=True, random_attended=False):
+        if random_attended is True:
+            attended = [True, False]
         eca = Eca.query.filter_by(name=eca).first()
         if eca is None:
             return "ECA does not exist"
-        registrations_users_in_eca = Registration.query.filter_by(eca=eca).all()
+        registrations_users_in_eca = Registration.query.filter_by(eca=eca, in_waiting_list=False).all()
         for registration in registrations_users_in_eca:
             for i in range(count):
-                date = datetime.date(2018, random.randint(1,12), random.randint(1,28))
-                db.session.add(Attendance(date=date, attended=attended, registration=registration))
-                try:
-                    db.session.commit()
-                except IntegrityError:
-                    db.session.rollback()
+                while True:
+                    try:
+                        date = datetime.date(2018, random.randint(1, 12), random.randint(1, 28))
+                        db.session.add(Attendance(date=date, attended=random.choice(attended),
+                                                  registration=registration))
+                        db.session.commit()
+                        break
+                    except IntegrityError:
+                        db.session.rollback()
 
     @staticmethod
-    def generate_fake_attendance(count, attended):
+    def generate_fake_attendance(count, attended=True, random_attended=False):
         all_ecas_names = [eca_name.name for eca_name in Eca.query.all()]
         for name in all_ecas_names:
-            Attendance.generate_fake_eca_attendance(count, name, attended)
+            Attendance.generate_fake_eca_attendance(count, name, attended, random_attended)
 
     def __repr__(self):
         return "Attendance: {} -> {} | {}".format(self.registration.user.username, self.registration.eca.name,
@@ -339,3 +344,6 @@ def setup_db():
     all_teachers = User.query.filter_by(role=Role.query.filter_by(name='Teacher').first()).all()
     for teacher in all_teachers:
         Eca.generate_fake(4, teacher.username)
+    Registration.join_all_fake()
+    Registration.join_all_fake(True)
+    Attendance.generate_fake_attendance(50, random_attended=True)

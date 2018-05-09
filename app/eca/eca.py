@@ -1,6 +1,8 @@
+import operator
+
 from flask import render_template, abort, redirect, url_for
 from flask_login import login_required
-from sqlalchemy import asc, desc
+from sqlalchemy import asc
 
 from app.decorators import check_user_confirmed
 from app.decorators import permission_required
@@ -62,7 +64,8 @@ def eca_name_edit(eca_name):
     end_time_eca = eca.datetime.end_time.strftime('%H:%M')
 
     # By default the students are ordered by their first name
-    ordered_registrations = Registration.query.filter_by(eca=eca, in_waiting_list=False).join(User).order_by(asc(User.first_name)).all()
+    ordered_registrations = Registration.query.filter_by(eca=eca, in_waiting_list=False).\
+        join(User).order_by(asc(User.first_name)).all()
     # If the user has decided to change the order, then the form.validate_on_submit() function will be triggered
     # depending on the choice of the user the students will be sorted accordingly
 
@@ -75,11 +78,11 @@ def eca_name_edit(eca_name):
                 ordered_registrations = Registration.query.filter_by(eca=eca, in_waiting_list=False).join(User). \
                     order_by(asc(User.last_name)).all()
             elif form_sort_by.sort_by.data.lower() == 'highest_attendance':
-                ordered_registrations = Registration.query.filter_by(eca=eca, in_waiting_list=False).join(Attendance)\
-                    .order_by(desc(Attendance.attended))
+                ordered_registrations = get_student_true_attendance_min_max(eca)
+                ordered_registrations.reverse()  # Finally, since is ordered from smallest to largest the list is
+                # reversed so the user with the largest number of True attendance is at the beginning of the list
             elif form_sort_by.sort_by.data.lower() == 'lowest_attendance':
-                ordered_registrations = Registration.query.filter_by(eca=eca, in_waiting_list=False).join(Attendance) \
-                    .order_by(asc(Attendance.attended))
+                ordered_registrations = get_student_true_attendance_min_max(eca)
 
     else:
         if form.validate_on_submit():
@@ -123,6 +126,25 @@ def eca_name_edit(eca_name):
                            end_time_eca=end_time_eca, form_sort_by=form_sort_by,
                            ordered_registrations=ordered_registrations, title='{} ECA - Edit'.format(eca.name),
                            Attendance=Attendance, Registration=Registration)
+
+
+def get_student_true_attendance_min_max(eca):
+    """
+    Function to get a list of ordered registrations that has attended the most from smallest to largest
+    :param eca:
+    :return:
+    """
+    user_eca_related = Registration.query.filter_by(eca=eca, in_waiting_list=False).all()  # Gets all the users
+    # currently registered in the ECA
+    attendance_true_users_num = [len(Attendance.query.filter_by(attended=True, registration=registration).all()) for
+                                 registration in user_eca_related]  # List comprehension that its purpose is to take
+    # the number of True attendances of every student registered into the ECA and put them in a list
+    sorted_registration_attendance = sorted(dict(zip(user_eca_related, attendance_true_users_num)).items(),
+                                            key=operator.itemgetter(1))
+    # The number of true attendances is the value of the dictionary and the user with that number of True
+    # attendances is the value of the key
+    return [registration for registration, value in sorted_registration_attendance]  # Returns a list comprehension of
+    # all the users from smallest number of True attendances to largest
 
 
 @bp.route('/delete/<eca_name>')
@@ -273,16 +295,12 @@ def join_eca():
     if form.validate_on_submit():
         eca = Eca.query.filter_by(name=form.eca_name.data).first()
 
-        if len(eca.registration) == eca.max_people:
+        if len(Registration.query.filter_by(eca=eca, in_waiting_list=False).all()) == eca.max_people:
             db.session.add(Registration(user=current_user, eca=eca, in_waiting_list=True))
-            try:
-                db.session.commit()
-                flash('This ECA has reached its maximum capacity of students, you will be put on the waiting list',
-                      'info')
-            except IntegrityError:
-                flash('You have been already added into the waiting list of this ECA', 'danger')
-                db.session.rollback()
-                return redirect(url_for('eca.join_eca'))
+            db.session.commit()
+            flash('This ECA has reached its maximum capacity of students, you will be put on the waiting list',
+                  'info')
+            return redirect(url_for('eca.join_eca'))
         else:
             registration = Registration(user=current_user, eca=eca)  # Instantiates a registration object from the
             # Registration class and the required information is passed as parameters

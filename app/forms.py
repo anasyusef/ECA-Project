@@ -106,6 +106,7 @@ class JoinEca(FlaskForm):
         query_check = Registration.query.filter_by(user=current_user, eca=eca).first()
         all_registrations_by_user = Registration.query.filter_by(user=current_user).all()
         all_registrations_in_eca = Registration.query.filter_by(eca=eca).all()
+        eca_user_days = [registration.eca.datetime.day for registration in all_registrations_by_user]
 
         # Validation if the student is already registered in one ECA and is trying to register in the same one
 
@@ -114,13 +115,11 @@ class JoinEca(FlaskForm):
             raise ValidationError()
 
         # Validation if the student is registered in more than one ECA in the same day
-
-        for registration in all_registrations_by_user:
-            if registration.eca.datetime.day == eca.datetime.day:  # Checks if any of the ECA's day matches
-                # with the ones
-                # that are already registered. If there are, then a warning will be shown to the user
-                flash('You cannot register in more than one ECA in the same day', 'danger')
-                raise ValidationError()
+        if eca.datetime.day.lower() in eca_user_days:  # Checks if any of the ECA's day matches
+            # with the ones
+            # that are already registered. If there are, then a warning will be shown to the user
+            flash('You cannot register in more than one ECA in the same day', 'danger')
+            raise ValidationError()
 
         # Validation if student is trying to register and the capacity of active members is reached and the capacity
         # of the waiting list is reached or there is no waiting list
@@ -131,7 +130,7 @@ class JoinEca(FlaskForm):
             raise ValidationError()
 
         elif len(Registration.query.filter_by(eca=eca, in_waiting_list=True).all()) == eca.max_waiting_list and \
-                len(all_registrations_in_eca) == eca.max_people:
+                len(Registration.query.filter_by(eca=eca, in_waiting_list=False).all()) == eca.max_people:
             flash('This ECA has reached its waiting list capacity, if you still want to join into this'
                   ' ECA you will need to wait until some student drops out or is removed from the ECA',
                   'info')
@@ -225,10 +224,9 @@ class UpdateProfile(FlaskForm):
         if bool(self.old_password.data) is not False:  # Condition to check if the user has entered some data
             # on the 'Old Password field', if he/she has then an extra validator is added to the 'New Password' field
             # which is to make the field required
-            self.new_password.validate(self,
-                                       extra_validators=[DataRequired(message='Please enter new password')])
-            # If the extra validation has passed then the new password of the user is set
-            if self.validate():
+            if self.new_password.validate(self,
+                                          extra_validators=[DataRequired(message='Please enter new password')]):
+                # If the extra validation has passed then the new password of the user is set
                 current_user.set_password(self.new_password.data)
                 # The current user is added to the session of the database
                 db.session.add(current_user)

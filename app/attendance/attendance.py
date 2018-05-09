@@ -4,6 +4,7 @@ from sqlalchemy import desc, asc
 
 from app.attendance import bp
 from app.decorators import permission_required
+from app.eca.eca import get_student_true_attendance_min_max
 from app.forms import *
 from app.models import *
 
@@ -30,24 +31,29 @@ def view_attendance(eca_name, user_id):
     eca = Eca.query.filter_by(name=eca_name).first()
     if eca is None:
         abort(404)
+    if current_user.role.name.lower() == 'teacher' and eca.user != current_user:
+        flash("You are not allowed to view attendance on this ECA", 'danger')
+        return redirect(url_for('eca.manage_ecas'))
     form = SortBy()
     # By default the students are ordered by their first name
-    ordered_registrations = Registration.query.filter_by(eca=eca).join(User).order_by(asc(User.first_name)).all()
+    ordered_registrations = Registration.query.filter_by(eca=eca, in_waiting_list=False)\
+        .join(User).order_by(asc(User.first_name)).all()
     # If the user has decided to change the order, then the form.validate_on_submit() function will be triggered
     # depending on the choice of the user the students will be sorted accordingly
 
     if form.validate_on_submit():
         if form.sort_by.data.lower() == 'first_name':
-            ordered_registrations = Registration.query.filter_by(eca=eca).join(User).\
+            ordered_registrations = Registration.query.filter_by(eca=eca, in_waiting_list=False).\
+                join(User).\
                 order_by(asc(User.first_name)).all()
         elif form.sort_by.data.lower() == 'last_name':
-            ordered_registrations = Registration.query.filter_by(eca=eca).join(User).order_by(asc(User.last_name)).all()
+            ordered_registrations = Registration.query.filter_by(eca=eca, in_waiting_list=False).\
+                join(User).order_by(asc(User.last_name)).all()
         elif form.sort_by.data.lower() == 'highest_attendance':
-            ordered_registrations = Registration.query.filter_by(eca=eca).join(Attendance)\
-                .order_by(desc(Attendance.attended)).all()
+            ordered_registrations = get_student_true_attendance_min_max(eca)
+            ordered_registrations.reverse()
         elif form.sort_by.data.lower() == 'lowest_attendance':
-            ordered_registrations = Registration.query.filter_by(eca=eca).join(Attendance)\
-                .order_by(asc(Attendance.attended)).all()
+            ordered_registrations = get_student_true_attendance_min_max(eca)
 
     if user_id is not None:  # Checks if parameters were passed to the URL
         user = User.query.filter_by(id=user_id).first()  # If parameters were passed then find the
@@ -73,14 +79,11 @@ def view_attendance(eca_name, user_id):
         else:
             if current_user.role.name.lower() == 'teacher':  # This is done for security purposes, so that students
                 # cannot see who is in an ECA and who is not
-                flash('This user is not in this ECA' if current_user.role.name.lower() == 'teacher'
-                      else 'You are not allowed to go to this page', 'danger')
+                flash('This user is not in this ECA', 'danger')
+            elif current_user.role.name.lower() == 'student':
+                    flash('You are not allowed to go to this page', 'danger')
 
-            return redirect(url_for('attendance.view_attendance', eca_name=eca_name))
-
-    if eca.user != current_user:
-        flash("You are not allowed to view attendance on this ECA", 'danger')
-        return redirect(url_for('eca.manage_ecas'))
+            return redirect(url_for('eca.manage_ecas'))
 
     return render_template('view_attendance.html', Attendance=Attendance, Registration=Registration,
                            eca=eca, form=form, ordered_registrations=ordered_registrations)

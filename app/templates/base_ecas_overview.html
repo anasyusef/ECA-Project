@@ -46,7 +46,7 @@
                                 </div>
                                 {% else %}
                                 <div class="row justify-content-center">
-                                    {% if Registration.query.filter_by(user=current_user, eca=eca).first() %}
+                                    {% if Registration.query.filter_by(user=current_user, eca=eca, in_waiting_list=False).first() %}
                                     <div class="col-md-3 col-lg-5">
                                         <a class="btn btn-default btn-block" href="{{ url_for('attendance.view_attendance', eca_name=eca.name.lower(), user_id=current_user.id) }}">View Attendance</a>
                                     </div>
@@ -55,7 +55,7 @@
                                     </div>
                                     {% else %}
                                     <div class="col-md-8">
-                                        <a class="btn btn-default btn-block" href="{{ url_for('eca.quit_waiting_list_eca', eca_name=eca.name.lower()) }}">Quit from waiting list</a>
+                                        <a class="btn btn-default btn-block" href="{{ url_for('eca.quit_eca', eca_name=eca.name.lower()) }}">Quit from waiting list</a>
                                     </div>
                                     {% endif %}
                                 </div>
