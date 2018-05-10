@@ -162,7 +162,7 @@ class EditEca(AddEca, FlaskForm):
 
     def validate_max_people(self, max_people):
         eca = Eca.query.filter_by(name=request.path.split('/')[-1]).first()
-        if max_people.data < len(Registration.query.filter_by(eca=eca).all()):
+        if max_people.data < len(Registration.query.filter_by(eca=eca, in_waiting_list=False).all()):
             raise ValidationError('You need to remove students already joined in order to decrease the capacity of'
                                   ' students allowed')
 
