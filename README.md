@@ -5,7 +5,7 @@ In order to run the app, the following steps need to be done:
 1. Clone the repository
 2. Inside the ECA-Project-master folder activate the virtual environment with the `source venv/bin/activate` command:
 
-3. Run the `export FLASK_APP=ecaproject.py` command
+3. Run `export FLASK_APP=ecaproject.py`
 
 Before running the app the database settings needs to be amended from the `config.py` file.
 
