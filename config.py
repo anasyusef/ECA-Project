@@ -11,6 +11,6 @@ class Config:
     MAIL_SERVER = os.environ.get('MAIL_HOST', 'smtp.gmail.com')
     MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
     MAIL_USE_TLS = bool(os.environ.get('MAIL_USE_TLS', 1))
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME', 'ecaprojectnea@gmail.com')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', 'EcaProject2018')
-    ADMINS = ['ecaprojectnea@gmail.com']
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME', 'anas.y0807@gmail.com')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', 'sliford123')
+    ADMINS = ['ecap@gmail.com']
